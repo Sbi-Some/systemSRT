@@ -1,0 +1,478 @@
+/* SRT System Custom Styles */
+
+/* Variables CSS pour la cohérence des couleurs */
+:root {
+    --srt-primary: #1e3a8a;
+    --srt-secondary: #3730a3;
+    --srt-accent: #1e40af;
+    --srt-dark: #0f172a;
+    --srt-slate: #334155;
+    --srt-gray: #64748b;
+    --srt-success: #16a34a;
+    --srt-warning: #f59e0b;
+    --srt-danger: #dc2626;
+    --srt-info: #0ea5e9;
+}
+
+/* Animations personnalisées */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+    }
+}
+
+/* Classes utilitaires SRT */
+.srt-gradient {
+    background: linear-gradient(135deg, var(--srt-primary) 0%, var(--srt-secondary) 50%, var(--srt-accent) 100%);
+}
+
+.srt-card {
+    background: rgba(51, 65, 85, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.srt-button-primary {
+    background: var(--srt-primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.srt-button-primary:hover {
+    background: var(--srt-secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(30, 58, 138, 0.4);
+}
+
+/* Styles pour les niveaux de menace */
+.threat-critical {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    color: white;
+}
+
+.threat-high {
+    background: linear-gradient(135deg, #ea580c, #c2410c);
+    color: white;
+}
+
+.threat-medium {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: black;
+}
+
+.threat-low {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: white;
+}
+
+/* Styles pour les statuts */
+.status-new {
+    background: #3b82f6;
+    color: white;
+}
+
+.status-progress {
+    background: #f59e0b;
+    color: white;
+}
+
+.status-analyzed {
+    background: #10b981;
+    color: white;
+}
+
+.status-archived {
+    background: #6b7280;
+    color: white;
+}
+
+/* Styles pour la carte */
+.leaflet-container {
+    height: 500px;
+    border-radius: 0.75rem;
+    z-index: 1;
+}
+
+.leaflet-popup-content-wrapper {
+    background: var(--srt-slate);
+    color: white;
+    border-radius: 0.5rem;
+}
+
+.leaflet-popup-tip {
+    background: var(--srt-slate);
+}
+
+/* Styles pour les notifications */
+.notification-toast {
+    animation: slideInRight 0.3s ease-out;
+    background: rgba(51, 65, 85, 0.95);
+    backdrop-filter: blur(10px);
+    border-left: 4px solid var(--srt-info);
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.notification-toast.success {
+    border-left-color: var(--srt-success);
+}
+
+.notification-toast.warning {
+    border-left-color: var(--srt-warning);
+}
+
+.notification-toast.error {
+    border-left-color: var(--srt-danger);
+}
+
+/* Styles pour les formulaires */
+.srt-form-input {
+    background: rgba(51, 65, 85, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.srt-form-input:focus {
+    border-color: var(--srt-primary);
+    box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+    outline: none;
+}
+
+.srt-form-label {
+    color: #e2e8f0;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Styles pour les tableaux */
+.srt-table {
+    background: rgba(51, 65, 85, 0.9);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.srt-table th {
+    background: var(--srt-primary);
+    color: white;
+    padding: 1rem;
+    font-weight: 600;
+}
+
+.srt-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+.srt-table tr:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Styles pour la sidebar */
+.srt-sidebar {
+    background: linear-gradient(180deg, var(--srt-slate) 0%, var(--srt-dark) 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.srt-sidebar-item {
+    color: #cbd5e1;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin: 0.25rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.srt-sidebar-item:hover {
+    background: rgba(59, 130, 246, 0.2);
+    color: white;
+    transform: translateX(4px);
+}
+
+.srt-sidebar-item.active {
+    background: var(--srt-primary);
+    color: white;
+}
+
+/* Styles pour les badges */
+.srt-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.srt-badge-primary {
+    background: var(--srt-primary);
+    color: white;
+}
+
+.srt-badge-success {
+    background: var(--srt-success);
+    color: white;
+}
+
+.srt-badge-warning {
+    background: var(--srt-warning);
+    color: white;
+}
+
+.srt-badge-danger {
+    background: var(--srt-danger);
+    color: white;
+}
+
+/* Styles pour les alertes */
+.srt-alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+}
+
+.srt-alert-info {
+    background: rgba(14, 165, 233, 0.1);
+    border-left-color: var(--srt-info);
+    color: #0ea5e9;
+}
+
+.srt-alert-success {
+    background: rgba(22, 163, 74, 0.1);
+    border-left-color: var(--srt-success);
+    color: #16a34a;
+}
+
+.srt-alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-left-color: var(--srt-warning);
+    color: #f59e0b;
+}
+
+.srt-alert-danger {
+    background: rgba(220, 38, 38, 0.1);
+    border-left-color: var(--srt-danger);
+    color: #dc2626;
+}
+
+/* Styles pour les graphiques */
+.srt-chart-container {
+    background: rgba(51, 65, 85, 0.9);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .srt-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .srt-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .srt-card {
+        margin: 0.5rem;
+    }
+    
+    .srt-table {
+        font-size: 0.875rem;
+    }
+    
+    .srt-table th,
+    .srt-table td {
+        padding: 0.5rem;
+    }
+}
+
+/* Animations de chargement */
+.srt-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: var(--srt-primary);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Styles pour les modales */
+.srt-modal {
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.srt-modal-content {
+    background: var(--srt-slate);
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Styles pour les tooltips */
+.srt-tooltip {
+    background: var(--srt-dark);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* Styles pour les progress bars */
+.srt-progress {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    height: 0.5rem;
+    overflow: hidden;
+}
+
+.srt-progress-bar {
+    background: linear-gradient(90deg, var(--srt-primary), var(--srt-secondary));
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+/* Styles pour les onglets */
+.srt-tabs {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.srt-tab {
+    padding: 0.75rem 1.5rem;
+    color: #94a3b8;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.srt-tab:hover {
+    color: white;
+}
+
+.srt-tab.active {
+    color: var(--srt-primary);
+    border-bottom-color: var(--srt-primary);
+}
+
+/* Styles pour les cartes de statistiques */
+.srt-stat-card {
+    background: rgba(51, 65, 85, 0.9);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border-left: 4px solid var(--srt-primary);
+    transition: all 0.3s ease;
+}
+
+.srt-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.srt-stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+}
+
+.srt-stat-label {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+/* Styles pour les listes */
+.srt-list-item {
+    background: rgba(51, 65, 85, 0.5);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.srt-list-item:hover {
+    background: rgba(51, 65, 85, 0.8);
+    border-left-color: var(--srt-primary);
+    transform: translateX(4px);
+}
+
+/* Styles pour les boutons d'action */
+.srt-action-button {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #cbd5e1;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.srt-action-button:hover {
+    background: var(--srt-primary);
+    border-color: var(--srt-primary);
+    color: white;
+}
+
+/* Styles pour les indicateurs de statut */
+.srt-status-indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 0.5rem;
+}
+
+.srt-status-online {
+    background: var(--srt-success);
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.3);
+}
+
+.srt-status-offline {
+    background: var(--srt-gray);
+}
+
+.srt-status-warning {
+    background: var(--srt-warning);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+}
+
+.srt-status-danger {
+    background: var(--srt-danger);
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3);
+}

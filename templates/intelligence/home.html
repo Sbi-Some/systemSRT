@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+
+{% block title %}Renseignement - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-indigo-800 to-purple-800 rounded-lg p-6 text-white">
+        <h1 class="text-3xl font-bold mb-2">Centre de Renseignement</h1>
+        <p class="text-indigo-100">Collecte, analyse et gestion des informations tactiques</p>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <a href="{% url 'intelligence:report_create' %}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="font-medium">Nouveau Rapport</span>
+        </a>
+        
+        <a href="{% url 'intelligence:report_list' %}" 
+           class="bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span class="font-medium">Tous les Rapports</span>
+        </a>
+        
+        <a href="{% url 'intelligence:map' %}" 
+           class="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+            </svg>
+            <span class="font-medium">Cartographie</span>
+        </a>
+        
+        <a href="{% url 'analysis:home' %}" 
+           class="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <span class="font-medium">Analyses</span>
+        </a>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Total Rapports</dt>
+                        <dd class="text-2xl font-bold text-white">{{ stats.total_reports }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Nouveaux</dt>
+                        <dd class="text-2xl font-bold text-white">{{ stats.new_reports }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Menaces Critiques</dt>
+                        <dd class="text-2xl font-bold text-white">{{ stats.critical_reports }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Catégories</dt>
+                        <dd class="text-2xl font-bold text-white">{{ stats.threat_categories }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Reports by Threat Level -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Critical Threats -->
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                    Menaces Critiques
+                </h2>
+                <a href="{% url 'intelligence:report_list' %}?threat_level=CRITICAL" 
+                   class="text-red-400 hover:text-red-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for report in reports_by_threat.critical %}
+                <div class="bg-red-900/20 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <h3 class="font-medium text-white">{{ report.title }}</h3>
+                    <p class="text-sm text-gray-400 mt-1">{{ report.description|truncatewords:15 }}</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs text-gray-500">{{ report.source_agent.get_full_name }}</span>
+                        <span class="text-xs text-gray-500">{{ report.report_date|timesince }} ago</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-4">Aucune menace critique récente</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- High Threats -->
+        <div class="bg-slate-800 rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white flex items-center">
+                    <span class="w-3 h-3 bg-orange-500 rounded-full mr-2"></span>
+                    Menaces Élevées
+                </h2>
+                <a href="{% url 'intelligence:report_list' %}?threat_level=HIGH" 
+                   class="text-orange-400 hover:text-orange-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for report in reports_by_threat.high %}
+                <div class="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded-r-lg">
+                    <h3 class="font-medium text-white">{{ report.title }}</h3>
+                    <p class="text-sm text-gray-400 mt-1">{{ report.description|truncatewords:15 }}</p>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-xs text-gray-500">{{ report.source_agent.get_full_name }}</span>
+                        <span class="text-xs text-gray-500">{{ report.report_date|timesince }} ago</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-4">Aucune menace élevée récente</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="bg-slate-800 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Accès Rapide</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <a href="{% url 'intelligence:category_list' %}" 
+               class="text-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+                <div class="text-blue-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm text-white">Catégories</span>
+            </a>
+            
+            <a href="{% url 'intelligence:group_list' %}" 
+               class="text-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+                <div class="text-red-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm text-white">Groupes Hostiles</span>
+            </a>
+            
+            <a href="{% url 'intelligence:report_list' %}?status=NEW" 
+               class="text-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+                <div class="text-yellow-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm text-white">En Attente</span>
+            </a>
+            
+            <a href="{% url 'intelligence:report_list' %}?status=IN_PROGRESS" 
+               class="text-center p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors">
+                <div class="text-green-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                    </svg>
+                </div>
+                <span class="text-sm text-white">En Cours</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

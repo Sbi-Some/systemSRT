@@ -1,0 +1,505 @@
+{% extends 'base.html' %}
+
+{% block title %}Cartographie - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Cartographie Tactique</h1>
+            <p class="text-gray-400 mt-1">Visualisation géographique des rapports et zones sensibles</p>
+        </div>
+        
+        <div class="flex space-x-4">
+            <button onclick="refreshMapData()" class="srt-action-button">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Actualiser
+            </button>
+            
+            <a href="{% url 'intelligence:report_create' %}" class="srt-button-primary">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Nouveau Rapport
+            </a>
+        </div>
+    </div>
+    
+    <!-- Filtres et contrôles -->
+    <div class="srt-card p-4">
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-300">Niveau de menace:</label>
+                <select id="threatLevelFilter" class="srt-form-input text-sm">
+                    <option value="">Tous</option>
+                    <option value="CRITICAL">Critique</option>
+                    <option value="HIGH">Élevé</option>
+                    <option value="MEDIUM">Moyen</option>
+                    <option value="LOW">Faible</option>
+                </select>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-300">Période:</label>
+                <select id="periodFilter" class="srt-form-input text-sm">
+                    <option value="7">7 derniers jours</option>
+                    <option value="30" selected>30 derniers jours</option>
+                    <option value="90">90 derniers jours</option>
+                    <option value="">Toutes les données</option>
+                </select>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-300">Catégorie:</label>
+                <select id="categoryFilter" class="srt-form-input text-sm">
+                    <option value="">Toutes</option>
+                    {% for category in threat_categories %}
+                    <option value="{{ category.id }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="showZones" checked class="rounded">
+                <label for="showZones" class="text-sm text-gray-300">Zones surveillées</label>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+                <input type="checkbox" id="clusterMarkers" checked class="rounded">
+                <label for="clusterMarkers" class="text-sm text-gray-300">Regrouper les marqueurs</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Carte principale -->
+    <div class="srt-card p-4">
+        <div id="mainMap" class="h-96 lg:h-[600px] rounded-lg"></div>
+    </div>
+    
+    <!-- Légende et statistiques -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Légende -->
+        <div class="srt-card p-6">
+            <h3 class="text-lg font-bold text-white mb-4">Légende</h3>
+            
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 bg-red-500 rounded-full"></div>
+                    <span class="text-sm text-gray-300">Menace Critique</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 bg-orange-500 rounded-full"></div>
+                    <span class="text-sm text-gray-300">Menace Élevée</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 bg-yellow-500 rounded-full"></div>
+                    <span class="text-sm text-gray-300">Menace Moyenne</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="w-4 h-4 bg-green-500 rounded-full"></div>
+                    <span class="text-sm text-gray-300">Menace Faible</span>
+                </div>
+                
+                <div class="border-t border-gray-600 pt-3 mt-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 border-2 border-blue-500 bg-blue-500/20 rounded"></div>
+                        <span class="text-sm text-gray-300">Zone Surveillée</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="lg:col-span-2 srt-card p-6">
+            <h3 class="text-lg font-bold text-white mb-4">Statistiques de la Carte</h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-red-400" id="criticalCount">0</div>
+                    <div class="text-xs text-gray-400">Critiques</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-400" id="highCount">0</div>
+                    <div class="text-xs text-gray-400">Élevées</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-400" id="mediumCount">0</div>
+                    <div class="text-xs text-gray-400">Moyennes</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-400" id="lowCount">0</div>
+                    <div class="text-xs text-gray-400">Faibles</div>
+                </div>
+            </div>
+            
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <span class="text-gray-400">Total des rapports:</span>
+                    <span class="text-white font-medium ml-2" id="totalReports">0</span>
+                </div>
+                <div>
+                    <span class="text-gray-400">Zones surveillées:</span>
+                    <span class="text-white font-medium ml-2" id="totalZones">{{ geographic_zones.count }}</span>
+                </div>
+                <div>
+                    <span class="text-gray-400">Dernière mise à jour:</span>
+                    <span class="text-white font-medium ml-2" id="lastUpdate">-</span>
+                </div>
+                <div>
+                    <span class="text-gray-400">Période affichée:</span>
+                    <span class="text-white font-medium ml-2" id="displayPeriod">30 jours</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let mainMap;
+let markersLayer;
+let zonesLayer;
+let currentMarkers = [];
+let currentZones = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMap();
+    loadMapData();
+    setupEventListeners();
+});
+
+function initializeMap() {
+    // Initialiser la carte principale
+    mainMap = SRT.maps.create('mainMap', {
+        center: [46.603354, 1.888334],
+        zoom: 6
+    });
+    
+    // Créer les couches pour les marqueurs et zones
+    markersLayer = L.layerGroup().addTo(mainMap);
+    zonesLayer = L.layerGroup().addTo(mainMap);
+}
+
+function setupEventListeners() {
+    // Filtres
+    document.getElementById('threatLevelFilter').addEventListener('change', loadMapData);
+    document.getElementById('periodFilter').addEventListener('change', loadMapData);
+    document.getElementById('categoryFilter').addEventListener('change', loadMapData);
+    
+    // Contrôles d'affichage
+    document.getElementById('showZones').addEventListener('change', function() {
+        if (this.checked) {
+            zonesLayer.addTo(mainMap);
+        } else {
+            mainMap.removeLayer(zonesLayer);
+        }
+    });
+    
+    document.getElementById('clusterMarkers').addEventListener('change', loadMapData);
+}
+
+async function loadMapData() {
+    try {
+        // Afficher un indicateur de chargement
+        showLoadingIndicator();
+        
+        // Construire les paramètres de filtre
+        const filters = {
+            threat_level: document.getElementById('threatLevelFilter').value,
+            days: document.getElementById('periodFilter').value,
+            category: document.getElementById('categoryFilter').value
+        };
+        
+        // Supprimer les paramètres vides
+        Object.keys(filters).forEach(key => {
+            if (!filters[key]) delete filters[key];
+        });
+        
+        // Charger les données
+        const data = await SRT.api.get(`/intelligence/map-data/?${new URLSearchParams(filters)}`);
+        
+        // Effacer les marqueurs existants
+        markersLayer.clearLayers();
+        zonesLayer.clearLayers();
+        currentMarkers = [];
+        currentZones = [];
+        
+        // Ajouter les rapports
+        if (data.reports && data.reports.length > 0) {
+            addReportsToMap(data.reports);
+        }
+        
+        // Ajouter les zones
+        if (data.zones && data.zones.length > 0) {
+            addZonesToMap(data.zones);
+        }
+        
+        // Mettre à jour les statistiques
+        updateMapStatistics(data.reports || []);
+        
+        // Mettre à jour la dernière mise à jour
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('fr-FR');
+        
+        hideLoadingIndicator();
+        
+    } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+        SRT.notifications.show('error', 'Erreur', 'Impossible de charger les données de la carte');
+        hideLoadingIndicator();
+    }
+}
+
+function addReportsToMap(reports) {
+    const clusterEnabled = document.getElementById('clusterMarkers').checked;
+    let markerClusterGroup;
+    
+    if (clusterEnabled && window.L && L.markerClusterGroup) {
+        markerClusterGroup = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            iconCreateFunction: function(cluster) {
+                const childCount = cluster.getChildCount();
+                let className = 'marker-cluster-';
+                
+                if (childCount < 10) {
+                    className += 'small';
+                } else if (childCount < 100) {
+                    className += 'medium';
+                } else {
+                    className += 'large';
+                }
+                
+                return new L.DivIcon({
+                    html: '<div><span>' + childCount + '</span></div>',
+                    className: 'marker-cluster ' + className,
+                    iconSize: new L.Point(40, 40)
+                });
+            }
+        });
+    }
+    
+    reports.forEach(report => {
+        if (SRT.utils.isValidCoordinate(report.latitude, report.longitude)) {
+            const marker = createReportMarker(report);
+            currentMarkers.push(marker);
+            
+            if (clusterEnabled && markerClusterGroup) {
+                markerClusterGroup.addLayer(marker);
+            } else {
+                markersLayer.addLayer(marker);
+            }
+        }
+    });
+    
+    if (clusterEnabled && markerClusterGroup) {
+        markersLayer.addLayer(markerClusterGroup);
+    }
+}
+
+function createReportMarker(report) {
+    const colors = {
+        'CRITICAL': '#dc2626',
+        'HIGH': '#ea580c',
+        'MEDIUM': '#f59e0b',
+        'LOW': '#16a34a'
+    };
+    
+    const color = colors[report.threat_level] || '#6b7280';
+    
+    const marker = L.circleMarker([report.latitude, report.longitude], {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.7,
+        radius: 8,
+        weight: 2
+    });
+    
+    // Popup avec informations détaillées
+    const popupContent = `
+        <div class="p-3 min-w-64">
+            <h3 class="font-bold text-sm mb-2">${report.title}</h3>
+            <div class="space-y-1 text-xs">
+                <div><strong>Niveau:</strong> <span class="inline-block px-2 py-1 rounded text-white" style="background-color: ${color}">${report.threat_level}</span></div>
+                <div><strong>Agent:</strong> ${report.agent}</div>
+                <div><strong>Date:</strong> ${report.report_date}</div>
+                <div><strong>Localisation:</strong> ${report.location_description || 'Coordonnées GPS'}</div>
+            </div>
+            <div class="mt-3 pt-2 border-t">
+                <a href="/intelligence/reports/${report.id}/" class="text-blue-600 hover:text-blue-800 text-xs">Voir le rapport complet →</a>
+            </div>
+        </div>
+    `;
+    
+    marker.bindPopup(popupContent, {
+        maxWidth: 300,
+        className: 'custom-popup'
+    });
+    
+    return marker;
+}
+
+function addZonesToMap(zones) {
+    zones.forEach(zone => {
+        if (zone.coordinates) {
+            try {
+                const geoJsonLayer = L.geoJSON(zone.coordinates, {
+                    style: {
+                        color: getZoneColor(zone.risk_level),
+                        weight: 2,
+                        opacity: 0.8,
+                        fillOpacity: 0.2
+                    }
+                });
+                
+                geoJsonLayer.bindPopup(`
+                    <div class="p-2">
+                        <h3 class="font-bold text-sm">${zone.name}</h3>
+                        <p class="text-xs mt-1">Type: ${zone.zone_type}</p>
+                        <p class="text-xs">Risque: ${zone.risk_level}</p>
+                    </div>
+                `);
+                
+                zonesLayer.addLayer(geoJsonLayer);
+                currentZones.push(geoJsonLayer);
+                
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout de la zone:', zone.name, error);
+            }
+        }
+    });
+}
+
+function getZoneColor(riskLevel) {
+    const colors = {
+        'CRITICAL': '#dc2626',
+        'HIGH': '#ea580c',
+        'MEDIUM': '#f59e0b',
+        'LOW': '#16a34a'
+    };
+    return colors[riskLevel] || '#6b7280';
+}
+
+function updateMapStatistics(reports) {
+    const stats = {
+        critical: 0,
+        high: 0,
+        medium: 0,
+        low: 0,
+        total: reports.length
+    };
+    
+    reports.forEach(report => {
+        switch (report.threat_level) {
+            case 'CRITICAL':
+                stats.critical++;
+                break;
+            case 'HIGH':
+                stats.high++;
+                break;
+            case 'MEDIUM':
+                stats.medium++;
+                break;
+            case 'LOW':
+                stats.low++;
+                break;
+        }
+    });
+    
+    document.getElementById('criticalCount').textContent = stats.critical;
+    document.getElementById('highCount').textContent = stats.high;
+    document.getElementById('mediumCount').textContent = stats.medium;
+    document.getElementById('lowCount').textContent = stats.low;
+    document.getElementById('totalReports').textContent = stats.total;
+    
+    // Mettre à jour la période affichée
+    const periodSelect = document.getElementById('periodFilter');
+    const selectedPeriod = periodSelect.options[periodSelect.selectedIndex].text;
+    document.getElementById('displayPeriod').textContent = selectedPeriod;
+}
+
+function refreshMapData() {
+    loadMapData();
+    SRT.notifications.show('info', 'Actualisation', 'Données de la carte mises à jour');
+}
+
+function showLoadingIndicator() {
+    // Ajouter un overlay de chargement sur la carte
+    const mapContainer = document.getElementById('mainMap');
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'mapLoading';
+    loadingDiv.className = 'absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 rounded-lg';
+    loadingDiv.innerHTML = `
+        <div class="text-white text-center">
+            <div class="srt-loading mb-2"></div>
+            <div class="text-sm">Chargement des données...</div>
+        </div>
+    `;
+    mapContainer.style.position = 'relative';
+    mapContainer.appendChild(loadingDiv);
+}
+
+function hideLoadingIndicator() {
+    const loadingDiv = document.getElementById('mapLoading');
+    if (loadingDiv) {
+        loadingDiv.remove();
+    }
+}
+
+// Fonction globale pour actualiser depuis l'extérieur
+window.refreshMapData = refreshMapData;
+</script>
+
+<!-- Styles CSS pour les clusters de marqueurs -->
+<style>
+.marker-cluster-small {
+    background-color: rgba(181, 226, 140, 0.6);
+}
+.marker-cluster-small div {
+    background-color: rgba(110, 204, 57, 0.6);
+}
+
+.marker-cluster-medium {
+    background-color: rgba(241, 211, 87, 0.6);
+}
+.marker-cluster-medium div {
+    background-color: rgba(240, 194, 12, 0.6);
+}
+
+.marker-cluster-large {
+    background-color: rgba(253, 156, 115, 0.6);
+}
+.marker-cluster-large div {
+    background-color: rgba(241, 128, 23, 0.6);
+}
+
+.marker-cluster {
+    background-clip: padding-box;
+    border-radius: 20px;
+}
+.marker-cluster div {
+    width: 30px;
+    height: 30px;
+    margin-left: 5px;
+    margin-top: 5px;
+    text-align: center;
+    border-radius: 15px;
+    font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+.marker-cluster span {
+    line-height: 30px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+    background: #334155;
+    color: white;
+    border-radius: 8px;
+}
+
+.custom-popup .leaflet-popup-tip {
+    background: #334155;
+}
+</style>
+{% endblock %}

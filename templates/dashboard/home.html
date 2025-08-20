@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de Bord - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-blue-800 to-indigo-800 rounded-lg p-6 text-white">
+        <h1 class="text-3xl font-bold mb-2">Tableau de Bord Tactique</h1>
+        <p class="text-blue-100">Vue d'ensemble de la situation - {{ now|date:"d/m/Y H:i" }}</p>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Nouveaux Rapports</dt>
+                        <dd class="text-2xl font-bold text-white" data-stat="new_reports">{{ stats.new_reports|default:0 }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Menaces Critiques</dt>
+                        <dd class="text-2xl font-bold text-white" data-stat="critical_threats">{{ stats.critical_threats|default:0 }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.5-3.5M9 17H4l3.5-3.5"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Alertes Actives</dt>
+                        <dd class="text-2xl font-bold text-white" data-stat="active_alerts">{{ stats.active_alerts|default:0 }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-400 truncate">Analyses Complètes</dt>
+                        <dd class="text-2xl font-bold text-white" data-stat="completed_analyses">{{ stats.completed_analyses|default:0 }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Dashboard Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Reports -->
+        <div class="lg:col-span-2 bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Rapports Récents</h2>
+                <a href="{% url 'intelligence:report_list' %}" class="text-blue-400 hover:text-blue-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for report in recent_reports %}
+                <div class="bg-slate-700 rounded-lg p-4 hover:bg-slate-600 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white">{{ report.title }}</h3>
+                            <p class="text-sm text-gray-400 mt-1">{{ report.description|truncatewords:15 }}</p>
+                            <div class="flex items-center mt-2 text-xs text-gray-500">
+                                <span class="mr-4">{{ report.source_agent.get_full_name }}</span>
+                                <span>{{ report.report_date|timesince }} ago</span>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if report.threat_level == 'CRITICAL' %}threat-critical text-white
+                                {% elif report.threat_level == 'HIGH' %}threat-high text-white
+                                {% elif report.threat_level == 'MEDIUM' %}threat-medium text-black
+                                {% else %}threat-low text-white{% endif %}">
+                                {{ report.get_threat_level_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-8">Aucun rapport récent</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Active Alerts -->
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Alertes Actives</h2>
+                <a href="{% url 'analysis:alert_list' %}" class="text-blue-400 hover:text-blue-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for alert in active_alerts %}
+                <div class="border-l-4 pl-4 py-2
+                    {% if alert.alert_level == 'EMERGENCY' %}border-red-500
+                    {% elif alert.alert_level == 'CRITICAL' %}border-red-400
+                    {% elif alert.alert_level == 'WARNING' %}border-yellow-400
+                    {% else %}border-blue-400{% endif %}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white text-sm">{{ alert.title }}</h3>
+                            <p class="text-xs text-gray-400 mt-1">{{ alert.message|truncatewords:10 }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ alert.created_at|timesince }} ago</p>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                            {% if alert.alert_level == 'EMERGENCY' %}bg-red-100 text-red-800
+                            {% elif alert.alert_level == 'CRITICAL' %}bg-red-100 text-red-800
+                            {% elif alert.alert_level == 'WARNING' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ alert.get_alert_level_display }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-8">Aucune alerte active</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts and Analytics -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Threat Level Distribution -->
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <h2 class="text-xl font-bold text-white mb-4">Répartition des Menaces</h2>
+            <div class="relative h-64">
+                <canvas id="threatChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Activity Timeline -->
+        <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+            <h2 class="text-xl font-bold text-white mb-4">Activité des 7 Derniers Jours</h2>
+            <div class="relative h-64">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Geographic Overview -->
+    <div class="bg-slate-800 rounded-lg p-6 card-shadow">
+        <h2 class="text-xl font-bold text-white mb-4">Vue Géographique</h2>
+        <div id="overviewMap" class="h-96 rounded-lg"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeThreatChart();
+    initializeActivityChart();
+    initializeOverviewMap();
+});
+
+function initializeThreatChart() {
+    const ctx = document.getElementById('threatChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Critique', 'Élevé', 'Moyen', 'Faible'],
+            datasets: [{
+                data: [{{ chart_data.threat_distribution.critical|default:0 }}, 
+                       {{ chart_data.threat_distribution.high|default:0 }}, 
+                       {{ chart_data.threat_distribution.medium|default:0 }}, 
+                       {{ chart_data.threat_distribution.low|default:0 }}],
+                backgroundColor: ['#dc2626', '#ea580c', '#facc15', '#16a34a'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeActivityChart() {
+    const ctx = document.getElementById('activityChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_data.activity_labels|safe|default:"[]" }},
+            datasets: [{
+                label: 'Rapports',
+                data: {{ chart_data.activity_data|safe|default:"[]" }},
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: 'white'
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: 'white'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                y: {
+                    ticks: {
+                        color: 'white'
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeOverviewMap() {
+    const map = L.map('overviewMap').setView([46.603354, 1.888334], 6);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Load recent report locations
+    fetch('/api/intelligence/map-data/')
+        .then(response => response.json())
+        .then(data => {
+            data.reports.forEach(report => {
+                if (report.latitude && report.longitude) {
+                    const color = report.threat_level === 'CRITICAL' ? 'red' : 
+                                  report.threat_level === 'HIGH' ? 'orange' :
+                                  report.threat_level === 'MEDIUM' ? 'yellow' : 'green';
+                    
+                    L.circleMarker([report.latitude, report.longitude], {
+                        color: color,
+                        fillColor: color,
+                        fillOpacity: 0.6,
+                        radius: 6
+                    }).addTo(map).bindPopup(`
+                        <strong>${report.title}</strong><br>
+                        Menace: ${report.threat_level}<br>
+                        Date: ${report.report_date}
+                    `);
+                }
+            });
+        })
+        .catch(error => console.error('Error loading map data:', error));
+}
+</script>
+{% endblock %}

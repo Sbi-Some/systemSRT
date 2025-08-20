@@ -1,0 +1,404 @@
+{% extends 'base.html' %}
+
+{% block title %}Centre d'Analyse - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-gradient-to-r from-purple-800 to-indigo-800 rounded-lg p-6 text-white">
+        <h1 class="text-3xl font-bold mb-2">Centre d'Analyse</h1>
+        <p class="text-purple-100">Évaluation des menaces et analyse des tendances</p>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{% url 'analysis:assessment_create' %}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <h3 class="font-medium text-lg">Nouvelle Évaluation</h3>
+            <p class="text-sm text-blue-100 mt-1">Créer une évaluation de menace</p>
+        </a>
+        
+        <a href="{% url 'analysis:trend_list' %}" 
+           class="bg-green-600 hover:bg-green-700 text-white p-6 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+            </svg>
+            <h3 class="font-medium text-lg">Analyses de Tendances</h3>
+            <p class="text-sm text-green-100 mt-1">Identifier les motifs et évolutions</p>
+        </a>
+        
+        <a href="{% url 'analysis:alert_list' %}" 
+           class="bg-red-600 hover:bg-red-700 text-white p-6 rounded-lg transition-colors text-center">
+            <svg class="mx-auto h-8 w-8 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <h3 class="font-medium text-lg">Alertes Actives</h3>
+            <p class="text-sm text-red-100 mt-1">Gérer les alertes et notifications</p>
+        </a>
+    </div>
+    
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="srt-stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="srt-stat-label">Total Évaluations</dt>
+                        <dd class="srt-stat-number">{{ stats.total_assessments }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="srt-stat-label">En Attente</dt>
+                        <dd class="srt-stat-number">{{ stats.pending_assessments }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="srt-stat-label">Alertes Actives</dt>
+                        <dd class="srt-stat-number">{{ stats.active_alerts }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-stat-card">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="srt-stat-label">Analyses Tendances</dt>
+                        <dd class="srt-stat-number">{{ stats.trend_analyses }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Assessments -->
+        <div class="srt-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Évaluations Récentes</h2>
+                <a href="{% url 'analysis:assessment_list' %}" class="text-blue-400 hover:text-blue-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for assessment in recent_assessments %}
+                <div class="srt-list-item">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white text-sm">{{ assessment.title }}</h3>
+                            <p class="text-xs text-gray-400 mt-1">{{ assessment.executive_summary|truncatewords:15 }}</p>
+                            <div class="flex items-center mt-2 text-xs text-gray-500">
+                                <span class="mr-4">{{ assessment.analyst.get_full_name }}</span>
+                                <span>{{ assessment.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        <div class="ml-4 flex flex-col items-end space-y-1">
+                            <span class="srt-badge srt-badge-{{ assessment.status|lower }}">
+                                {{ assessment.get_status_display }}
+                            </span>
+                            <div class="flex items-center text-xs">
+                                <span class="text-gray-400 mr-1">Risque:</span>
+                                <span class="font-medium text-white">{{ assessment.get_risk_score }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-8">Aucune évaluation récente</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Recent Alerts -->
+        <div class="srt-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Alertes Récentes</h2>
+                <a href="{% url 'analysis:alert_list' %}" class="text-red-400 hover:text-red-300 text-sm">Voir tout</a>
+            </div>
+            
+            <div class="space-y-3">
+                {% for alert in recent_alerts %}
+                <div class="border-l-4 pl-4 py-2
+                    {% if alert.alert_level == 'EMERGENCY' %}border-red-500
+                    {% elif alert.alert_level == 'CRITICAL' %}border-red-400
+                    {% elif alert.alert_level == 'WARNING' %}border-yellow-400
+                    {% else %}border-blue-400{% endif %}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-medium text-white text-sm">{{ alert.title }}</h3>
+                            <p class="text-xs text-gray-400 mt-1">{{ alert.message|truncatewords:12 }}</p>
+                            <div class="flex items-center mt-2 text-xs text-gray-500">
+                                <span class="mr-4">{{ alert.created_by.get_full_name }}</span>
+                                <span>{{ alert.created_at|timesince }} ago</span>
+                            </div>
+                        </div>
+                        <span class="srt-badge 
+                            {% if alert.alert_level == 'EMERGENCY' %}srt-badge-danger
+                            {% elif alert.alert_level == 'CRITICAL' %}srt-badge-danger
+                            {% elif alert.alert_level == 'WARNING' %}srt-badge-warning
+                            {% else %}srt-badge-primary{% endif %}">
+                            {{ alert.get_alert_level_display }}
+                        </span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-400 text-center py-8">Aucune alerte récente</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analysis Tools -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Outils d'Analyse</h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button onclick="openAnalysisModal('threat-correlation')" 
+                    class="srt-action-button text-center p-4">
+                <div class="text-blue-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm">Corrélation des Menaces</span>
+            </button>
+            
+            <button onclick="openAnalysisModal('pattern-detection')" 
+                    class="srt-action-button text-center p-4">
+                <div class="text-green-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm">Détection de Motifs</span>
+            </button>
+            
+            <button onclick="openAnalysisModal('risk-assessment')" 
+                    class="srt-action-button text-center p-4">
+                <div class="text-yellow-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm">Évaluation des Risques</span>
+            </button>
+            
+            <button onclick="openAnalysisModal('predictive-analysis')" 
+                    class="srt-action-button text-center p-4">
+                <div class="text-purple-400 mb-2">
+                    <svg class="mx-auto h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                <span class="text-sm">Analyse Prédictive</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les outils d'analyse -->
+<div id="analysisModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 modal">
+    <div class="srt-modal-content max-w-2xl w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="analysisModalTitle" class="text-xl font-bold text-white">Outil d'Analyse</h3>
+            <button onclick="closeModal('analysisModal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="analysisModalContent" class="text-gray-300">
+            <!-- Le contenu sera chargé dynamiquement -->
+        </div>
+        
+        <div class="flex justify-end space-x-4 mt-6">
+            <button onclick="closeModal('analysisModal')" class="srt-action-button">Fermer</button>
+            <button id="runAnalysisBtn" class="srt-button-primary">Lancer l'Analyse</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAnalysisModal(analysisType) {
+    const modal = document.getElementById('analysisModal');
+    const title = document.getElementById('analysisModalTitle');
+    const content = document.getElementById('analysisModalContent');
+    
+    const analysisTypes = {
+        'threat-correlation': {
+            title: 'Corrélation des Menaces',
+            content: `
+                <p class="mb-4">Analysez les corrélations entre différents types de menaces et identifiez les liens potentiels.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="srt-form-label">Période d'analyse</label>
+                        <select class="srt-form-input">
+                            <option>30 derniers jours</option>
+                            <option>90 derniers jours</option>
+                            <option>6 derniers mois</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="srt-form-label">Types de menaces</label>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Terroriste</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Criminelle</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Cyber</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Espionnage</label>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+        'pattern-detection': {
+            title: 'Détection de Motifs',
+            content: `
+                <p class="mb-4">Identifiez des motifs récurrents dans les données de renseignement.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="srt-form-label">Type de motif</label>
+                        <select class="srt-form-input">
+                            <option>Motifs temporels</option>
+                            <option>Motifs géographiques</option>
+                            <option>Motifs comportementaux</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="srt-form-label">Seuil de confiance</label>
+                        <input type="range" min="50" max="95" value="75" class="w-full">
+                        <div class="text-sm text-gray-400">75%</div>
+                    </div>
+                </div>
+            `
+        },
+        'risk-assessment': {
+            title: 'Évaluation des Risques',
+            content: `
+                <p class="mb-4">Évaluez le niveau de risque global basé sur les données actuelles.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="srt-form-label">Zone géographique</label>
+                        <select class="srt-form-input">
+                            <option>Toutes les zones</option>
+                            <option>Zone urbaine</option>
+                            <option>Zone frontalière</option>
+                            <option>Zone sensible</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="srt-form-label">Facteurs de risque</label>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <label class="flex items-center"><input type="checkbox" class="mr-2" checked> Activité récente</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2" checked> Niveau de menace</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Densité population</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Infrastructure critique</label>
+                        </div>
+                    </div>
+                </div>
+            `
+        },
+        'predictive-analysis': {
+            title: 'Analyse Prédictive',
+            content: `
+                <p class="mb-4">Prédisez les tendances futures basées sur les données historiques.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label class="srt-form-label">Horizon de prédiction</label>
+                        <select class="srt-form-input">
+                            <option>7 jours</option>
+                            <option>30 jours</option>
+                            <option>90 jours</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="srt-form-label">Variables à analyser</label>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <label class="flex items-center"><input type="checkbox" class="mr-2" checked> Fréquence des incidents</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2" checked> Évolution des menaces</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Zones à risque</label>
+                            <label class="flex items-center"><input type="checkbox" class="mr-2"> Groupes hostiles</label>
+                        </div>
+                    </div>
+                </div>
+            `
+        }
+    };
+    
+    const analysis = analysisTypes[analysisType];
+    if (analysis) {
+        title.textContent = analysis.title;
+        content.innerHTML = analysis.content;
+        
+        document.getElementById('runAnalysisBtn').onclick = function() {
+            runAnalysis(analysisType);
+        };
+        
+        SRT.modals.open('analysisModal');
+    }
+}
+
+function runAnalysis(analysisType) {
+    // Simuler l'exécution de l'analyse
+    const btn = document.getElementById('runAnalysisBtn');
+    const originalText = btn.textContent;
+    
+    btn.innerHTML = '<div class="srt-loading mr-2 inline-block"></div>Analyse en cours...';
+    btn.disabled = true;
+    
+    setTimeout(() => {
+        SRT.notifications.show('success', 'Analyse terminée', 
+            'Les résultats de l\'analyse sont disponibles dans le rapport.');
+        
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        SRT.modals.close('analysisModal');
+    }, 3000);
+}
+</script>
+{% endblock %}

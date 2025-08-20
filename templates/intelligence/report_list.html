@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Rapports de Renseignement - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Rapports de Renseignement</h1>
+            <p class="text-gray-400 mt-1">Gestion et suivi des rapports collectés</p>
+        </div>
+        <a href="{% url 'intelligence:report_create' %}" 
+           class="srt-button-primary">
+            <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Nouveau Rapport
+        </a>
+    </div>
+    
+    <!-- Filtres -->
+    <div class="srt-card p-6">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="srt-form-label">Statut</label>
+                <select name="status" class="srt-form-input">
+                    <option value="">Tous les statuts</option>
+                    <option value="NEW" {% if current_filters.status == 'NEW' %}selected{% endif %}>Nouveau</option>
+                    <option value="IN_PROGRESS" {% if current_filters.status == 'IN_PROGRESS' %}selected{% endif %}>En cours</option>
+                    <option value="ANALYZED" {% if current_filters.status == 'ANALYZED' %}selected{% endif %}>Analysé</option>
+                    <option value="VERIFIED" {% if current_filters.status == 'VERIFIED' %}selected{% endif %}>Vérifié</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Niveau de menace</label>
+                <select name="threat_level" class="srt-form-input">
+                    <option value="">Tous les niveaux</option>
+                    <option value="CRITICAL" {% if current_filters.threat_level == 'CRITICAL' %}selected{% endif %}>Critique</option>
+                    <option value="HIGH" {% if current_filters.threat_level == 'HIGH' %}selected{% endif %}>Élevé</option>
+                    <option value="MEDIUM" {% if current_filters.threat_level == 'MEDIUM' %}selected{% endif %}>Moyen</option>
+                    <option value="LOW" {% if current_filters.threat_level == 'LOW' %}selected{% endif %}>Faible</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Catégorie</label>
+                <select name="category" class="srt-form-input">
+                    <option value="">Toutes les catégories</option>
+                    {% for category in threat_categories %}
+                    <option value="{{ category.id }}" {% if current_filters.category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Recherche</label>
+                <div class="relative">
+                    <input type="text" name="search" value="{{ current_filters.search }}" 
+                           placeholder="Titre, description..." class="srt-form-input pr-10">
+                    <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Liste des rapports -->
+    <div class="srt-card">
+        <div class="srt-table">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Titre</th>
+                        <th class="text-left">Agent</th>
+                        <th class="text-left">Menace</th>
+                        <th class="text-left">Statut</th>
+                        <th class="text-left">Date</th>
+                        <th class="text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                    <tr class="hover:bg-slate-700/50">
+                        <td>
+                            <div>
+                                <h3 class="font-medium text-white">{{ report.title }}</h3>
+                                <p class="text-sm text-gray-400">{{ report.description|truncatewords:10 }}</p>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div class="text-white">{{ report.source_agent.get_full_name }}</div>
+                                <div class="text-gray-400">{{ report.get_source_type_display }}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="srt-badge threat-{{ report.threat_level|lower }}">
+                                {{ report.get_threat_level_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="srt-badge status-{{ report.status|lower }}">
+                                {{ report.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="text-sm text-gray-400">
+                            {{ report.report_date|date:"d/m/Y H:i" }}
+                        </td>
+                        <td>
+                            <div class="flex space-x-2">
+                                <a href="{% url 'intelligence:report_detail' report.pk %}" 
+                                   class="srt-action-button">
+                                    Voir
+                                </a>
+                                {% if report.source_agent == user or user.rank in 'SUPERVISOR,MANAGER,DIRECTOR,ADMINISTRATOR' %}
+                                <a href="{% url 'intelligence:report_edit' report.pk %}" 
+                                   class="srt-action-button">
+                                    Modifier
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-8 text-gray-400">
+                            Aucun rapport trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="flex justify-between items-center p-6 border-t border-gray-600">
+            <div class="text-sm text-gray-400">
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} rapports au total)
+            </div>
+            <div class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="srt-action-button">Précédent</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="srt-action-button">Suivant</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

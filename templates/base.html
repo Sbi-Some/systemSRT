@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-900">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SRT - Système de Renseignement Tactique{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 50%, #1e40af 100%);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .threat-critical {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+        
+        .threat-high {
+            background: linear-gradient(135deg, #ea580c, #c2410c);
+        }
+        
+        .threat-medium {
+            background: linear-gradient(135deg, #facc15, #eab308);
+        }
+        
+        .threat-low {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+        
+        .status-new {
+            background: #3b82f6;
+        }
+        
+        .status-progress {
+            background: #f59e0b;
+        }
+        
+        .status-analyzed {
+            background: #10b981;
+        }
+        
+        .leaflet-container {
+            height: 500px;
+            z-index: 1;
+        }
+        
+        .notification-enter {
+            transform: translateX(100%);
+        }
+        
+        .notification-enter-active {
+            transform: translateX(0);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .sidebar-transition {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-slate-900 text-white" x-data="{ sidebarOpen: true, notifications: [] }">
+    <!-- Navigation -->
+    <nav class="gradient-bg shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <button @click="sidebarOpen = !sidebarOpen" class="text-white hover:text-blue-200 mr-4">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
+                    <div class="flex-shrink-0 flex items-center">
+                        <h1 class="text-xl font-bold text-white">SRT</h1>
+                        <span class="ml-2 text-blue-200 text-sm">Système de Renseignement Tactique</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <!-- Notifications -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="text-white hover:text-blue-200 relative">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-3.5-3.5M9 17H4l3.5-3.5M12 3v11.5"></path>
+                                </svg>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+                            </button>
+                            
+                            <div x-show="open" @click.outside="open = false" 
+                                 class="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg py-1 z-50">
+                                <div class="px-4 py-2 text-sm text-gray-700 border-b">
+                                    <strong>Notifications récentes</strong>
+                                </div>
+                                <div class="max-h-96 overflow-y-auto">
+                                    <!-- Notifications dynamiques -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User menu -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center text-sm rounded-full text-white hover:text-blue-200">
+                                <span class="mr-2">{{ user.get_full_name|default:user.username }}</span>
+                                <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center">
+                                    {{ user.first_name.0|default:user.username.0|upper }}
+                                </div>
+                            </button>
+                            
+                            <div x-show="open" @click.outside="open = false" 
+                                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{% url 'authentication:profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil</a>
+                                <a href="{% url 'authentication:password_change' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Changer le mot de passe</a>
+                                <div class="border-t border-gray-100"></div>
+                                <a href="{% url 'authentication:logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Déconnexion</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'authentication:login' %}" class="text-white hover:text-blue-200">Connexion</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="flex">
+        <!-- Sidebar -->
+        <div x-show="sidebarOpen" class="sidebar-transition w-64 bg-slate-800 min-h-screen shadow-lg">
+            <div class="p-4">
+                <nav class="space-y-2">
+                    <a href="{% url 'dashboard:home' %}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded-md">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                        </svg>
+                        Tableau de Bord
+                    </a>
+                    
+                    <a href="{% url 'intelligence:home' %}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded-md">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Renseignement
+                    </a>
+                    
+                    <a href="{% url 'intelligence:map' %}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded-md">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                        </svg>
+                        Cartographie
+                    </a>
+                    
+                    <a href="{% url 'analysis:home' %}" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded-md">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        Analyse
+                    </a>
+                    
+                    {% if user.is_staff %}
+                    <div class="border-t border-slate-600 my-2"></div>
+                    <a href="/admin/" class="flex items-center px-4 py-2 text-white hover:bg-slate-700 rounded-md">
+                        <svg class="mr-3 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Administration
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="flex-1 transition-all duration-300" :class="{ 'ml-0': !sidebarOpen }">
+            <main class="p-6">
+                <!-- Messages -->
+                {% if messages %}
+                    <div class="mb-6">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} bg-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or message.tags == 'warning' and 'yellow' or 'blue' }}-100 border border-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or message.tags == 'warning' and 'yellow' or 'blue' }}-400 text-{{ message.tags == 'error' and 'red' or message.tags == 'success' and 'green' or message.tags == 'warning' and 'yellow' or 'blue' }}-700 px-4 py-3 rounded mb-4">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Notification Toast Container -->
+    <div class="fixed top-4 right-4 z-50" x-data="notificationSystem()">
+        <template x-for="notification in notifications" :key="notification.id">
+            <div class="bg-white rounded-lg shadow-lg p-4 mb-2 max-w-sm notification-enter"
+                 :class="`border-l-4 border-${notification.type === 'error' ? 'red' : notification.type === 'success' ? 'green' : notification.type === 'warning' ? 'yellow' : 'blue'}-500`">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <svg x-show="notification.type === 'success'" class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <svg x-show="notification.type === 'error'" class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                        <svg x-show="notification.type === 'warning'" class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <svg x-show="notification.type === 'info'" class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium text-gray-900" x-text="notification.title"></p>
+                        <p class="text-sm text-gray-500" x-text="notification.message"></p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0">
+                        <button @click="removeNotification(notification.id)" class="text-gray-400 hover:text-gray-600">
+                            <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+    
+    <script>
+        function notificationSystem() {
+            return {
+                notifications: [],
+                nextId: 1,
+                
+                addNotification(type, title, message, duration = 5000) {
+                    const notification = {
+                        id: this.nextId++,
+                        type: type,
+                        title: title,
+                        message: message
+                    };
+                    
+                    this.notifications.push(notification);
+                    
+                    if (duration > 0) {
+                        setTimeout(() => {
+                            this.removeNotification(notification.id);
+                        }, duration);
+                    }
+                },
+                
+                removeNotification(id) {
+                    const index = this.notifications.findIndex(n => n.id === id);
+                    if (index > -1) {
+                        this.notifications.splice(index, 1);
+                    }
+                }
+            };
+        }
+        
+        // Global notification function
+        window.showNotification = function(type, title, message, duration = 5000) {
+            const event = new CustomEvent('show-notification', {
+                detail: { type, title, message, duration }
+            });
+            document.dispatchEvent(event);
+        };
+        
+        document.addEventListener('show-notification', function(e) {
+            const { type, title, message, duration } = e.detail;
+            // This assumes Alpine.js is handling the notification system
+            Alpine.store('notifications').addNotification(type, title, message, duration);
+        });
+        
+        // Real-time updates (WebSocket simulation)
+        function initializeRealTimeUpdates() {
+            // Simulated WebSocket connection
+            setInterval(() => {
+                // Check for new alerts, reports, etc.
+                fetch('/api/dashboard/stats/')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Update UI with new data
+                        updateDashboardStats(data);
+                    })
+                    .catch(error => console.error('Error fetching updates:', error));
+            }, 30000); // Check every 30 seconds
+        }
+        
+        function updateDashboardStats(data) {
+            // Update dashboard elements
+            document.querySelectorAll('[data-stat]').forEach(element => {
+                const statName = element.getAttribute('data-stat');
+                if (data[statName] !== undefined) {
+                    element.textContent = data[statName];
+                }
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeRealTimeUpdates();
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if object %}Modifier le Rapport{% else %}Nouveau Rapport{% endif %} - SRT
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center space-x-4">
+        <a href="{% url 'intelligence:report_list' %}" class="text-blue-400 hover:text-blue-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-white">
+            {% if object %}Modifier le Rapport{% else %}Nouveau Rapport de Renseignement{% endif %}
+        </h1>
+    </div>
+    
+    <!-- Formulaire -->
+    <form method="post" class="space-y-6" id="reportForm">
+        {% csrf_token %}
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Informations Générales</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.title.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.report_type.label }}</label>
+                    {{ form.report_type }}
+                    {% if form.report_type.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.report_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.classification_level.label }}</label>
+                    {{ form.classification_level }}
+                    {% if form.classification_level.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.classification_level.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.source_type.label }}</label>
+                    {{ form.source_type }}
+                    {% if form.source_type.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.source_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.priority.label }}</label>
+                    {{ form.priority }}
+                    {% if form.priority.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.priority.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Localisation</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="srt-form-label">{{ form.latitude.label }}</label>
+                    {{ form.latitude }}
+                    {% if form.latitude.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.latitude.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.longitude.label }}</label>
+                    {{ form.longitude }}
+                    {% if form.longitude.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.longitude.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <button type="button" id="getCurrentLocation" 
+                            class="srt-button-primary mt-6">
+                        <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Position GPS
+                    </button>
+                </div>
+                
+                <div class="md:col-span-3">
+                    <label class="srt-form-label">{{ form.location_description.label }}</label>
+                    {{ form.location_description }}
+                    {% if form.location_description.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.location_description.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Carte de prévisualisation -->
+            <div class="mt-6">
+                <div id="locationMap" class="h-64 rounded-lg bg-slate-700"></div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Analyse des Menaces</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="srt-form-label">{{ form.threat_level.label }}</label>
+                    {{ form.threat_level }}
+                    {% if form.threat_level.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.threat_level.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">{{ form.confidence_level.label }}</label>
+                    {{ form.confidence_level }}
+                    {% if form.confidence_level.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.confidence_level.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">{{ form.threat_categories.label }}</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                        {% for choice in form.threat_categories %}
+                        <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            {{ choice.tag }}
+                            <span>{{ choice.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.threat_categories.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.threat_categories.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">{{ form.hostile_groups.label }}</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                        {% for choice in form.hostile_groups %}
+                        <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            {{ choice.tag }}
+                            <span>{{ choice.choice_label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% if form.hostile_groups.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.hostile_groups.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">{{ form.tags.label }}</label>
+                    {{ form.tags }}
+                    <p class="text-xs text-gray-400 mt-1">Séparez les tags par des virgules</p>
+                    {% if form.tags.errors %}
+                        <div class="text-red-500 text-sm mt-1">{{ form.tags.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex justify-between items-center">
+            <a href="{% url 'intelligence:report_list' %}" 
+               class="srt-action-button">
+                Annuler
+            </a>
+            
+            <div class="space-x-4">
+                <button type="submit" name="status" value="DRAFT" 
+                        class="srt-action-button">
+                    Enregistrer comme brouillon
+                </button>
+                <button type="submit" name="status" value="NEW" 
+                        class="srt-button-primary">
+                    {% if object %}Mettre à jour{% else %}Créer le rapport{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser la carte
+    const map = SRT.maps.create('locationMap', {
+        center: [46.603354, 1.888334],
+        zoom: 6
+    });
+    
+    let currentMarker = null;
+    
+    // Fonction pour mettre à jour la position sur la carte
+    function updateMapPosition(lat, lng) {
+        if (currentMarker) {
+            map.removeLayer(currentMarker);
+        }
+        
+        if (lat && lng) {
+            currentMarker = L.marker([lat, lng]).addTo(map);
+            map.setView([lat, lng], 12);
+        }
+    }
+    
+    // Écouter les changements dans les champs de coordonnées
+    const latInput = document.getElementById('id_latitude');
+    const lngInput = document.getElementById('id_longitude');
+    
+    function handleCoordinateChange() {
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+            updateMapPosition(lat, lng);
+        }
+    }
+    
+    latInput.addEventListener('input', SRT.utils.debounce(handleCoordinateChange, 500));
+    lngInput.addEventListener('input', SRT.utils.debounce(handleCoordinateChange, 500));
+    
+    // Initialiser avec les valeurs existantes
+    handleCoordinateChange();
+    
+    // Géolocalisation
+    document.getElementById('getCurrentLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            this.innerHTML = '<div class="srt-loading mr-2 inline-block"></div>Localisation...';
+            this.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    latInput.value = lat.toFixed(6);
+                    lngInput.value = lng.toFixed(6);
+                    
+                    updateMapPosition(lat, lng);
+                    
+                    SRT.notifications.show('success', 'Position obtenue', 
+                        'Coordonnées GPS mises à jour avec succès');
+                    
+                    this.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Position GPS';
+                    this.disabled = false;
+                },
+                (error) => {
+                    SRT.notifications.show('error', 'Erreur de géolocalisation', 
+                        'Impossible d\'obtenir votre position');
+                    
+                    this.innerHTML = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>Position GPS';
+                    this.disabled = false;
+                }
+            );
+        } else {
+            SRT.notifications.show('error', 'Géolocalisation non supportée', 
+                'Votre navigateur ne supporte pas la géolocalisation');
+        }
+    });
+    
+    // Clic sur la carte pour définir la position
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+        
+        latInput.value = lat.toFixed(6);
+        lngInput.value = lng.toFixed(6);
+        
+        updateMapPosition(lat, lng);
+    });
+    
+    // Validation du formulaire
+    document.getElementById('reportForm').addEventListener('submit', function(e) {
+        if (!SRT.forms.validate(this)) {
+            e.preventDefault();
+            SRT.notifications.show('error', 'Erreur de validation', 
+                'Veuillez corriger les erreurs dans le formulaire');
+        }
+    });
+});
+</script>
+{% endblock %}
