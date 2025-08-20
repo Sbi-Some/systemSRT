@@ -1,0 +1,425 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ dashboard.name }} - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'dashboard:home' %}" class="text-blue-400 hover:text-blue-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-white">{{ dashboard.name }}</h1>
+                {% if dashboard.description %}
+                <p class="text-gray-400 mt-1">{{ dashboard.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            {% if dashboard.is_public %}
+            <span class="srt-badge srt-badge-success">Public</span>
+            {% else %}
+            <span class="srt-badge srt-badge-primary">Privé</span>
+            {% endif %}
+            
+            {% if dashboard.owner == user %}
+            <button onclick="openModal('editDashboardModal')" class="srt-action-button">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Modifier
+            </button>
+            
+            <button onclick="addWidget()" class="srt-button-primary">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Ajouter Widget
+            </button>
+            {% endif %}
+            
+            <button onclick="refreshDashboard()" class="srt-action-button">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Actualiser
+            </button>
+        </div>
+    </div>
+    
+    <!-- Métadonnées du tableau de bord -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Propriétaire</div>
+            <div class="text-white font-medium">{{ dashboard.owner.get_full_name }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Créé le</div>
+            <div class="text-white font-medium">{{ dashboard.created_at|date:"d/m/Y à H:i" }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Dernière MAJ</div>
+            <div class="text-white font-medium">{{ dashboard.updated_at|date:"d/m/Y à H:i" }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Widgets</div>
+            <div class="text-white font-medium">{{ widgets.count }}</div>
+        </div>
+    </div>
+    
+    <!-- Widgets du tableau de bord -->
+    {% if widgets %}
+    <div class="dashboard-grid" id="dashboardGrid">
+        {% for widget in widgets %}
+        <div class="widget-container" data-widget-id="{{ widget.id }}" 
+             style="grid-column: span {{ widget.width }}; grid-row: span {{ widget.height }};">
+            
+            <div class="srt-card p-4 h-full">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-bold text-white">{{ widget.title }}</h3>
+                    
+                    {% if dashboard.owner == user %}
+                    <div class="flex space-x-2">
+                        <button onclick="configureWidget('{{ widget.id }}')" 
+                                class="text-gray-400 hover:text-white">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </button>
+                        
+                        <button onclick="removeWidget('{{ widget.id }}')" 
+                                class="text-red-400 hover:text-red-300">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Contenu du widget -->
+                <div class="widget-content h-full">
+                    {% if widget.widget_type == 'CHART' %}
+                        <div class="h-64">
+                            <canvas id="chart-{{ widget.id }}"></canvas>
+                        </div>
+                    {% elif widget.widget_type == 'TABLE' %}
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-600">
+                                        <th class="text-left py-2">Élément</th>
+                                        <th class="text-left py-2">Valeur</th>
+                                        <th class="text-left py-2">Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-{{ widget.id }}">
+                                    <!-- Données chargées dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
+                    {% elif widget.widget_type == 'MAP' %}
+                        <div id="map-{{ widget.id }}" class="h-64 rounded"></div>
+                    {% elif widget.widget_type == 'COUNTER' %}
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-400 mb-2" id="counter-{{ widget.id }}">
+                                --
+                            </div>
+                            <div class="text-sm text-gray-400">{{ widget.config.label|default:"Métrique" }}</div>
+                        </div>
+                    {% elif widget.widget_type == 'ALERT_FEED' %}
+                        <div class="space-y-2 max-h-64 overflow-y-auto" id="alerts-{{ widget.id }}">
+                            <!-- Alertes chargées dynamiquement -->
+                        </div>
+                    {% elif widget.widget_type == 'REPORT_LIST' %}
+                        <div class="space-y-2 max-h-64 overflow-y-auto" id="reports-{{ widget.id }}">
+                            <!-- Rapports chargés dynamiquement -->
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="srt-card p-8 text-center">
+        <div class="text-gray-400 mb-4">
+            <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+        </div>
+        <h3 class="text-lg font-medium text-white mb-2">Aucun widget</h3>
+        <p class="text-gray-400 mb-4">Ce tableau de bord ne contient aucun widget.</p>
+        {% if dashboard.owner == user %}
+        <button onclick="addWidget()" class="srt-button-primary">
+            Ajouter votre premier widget
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal d'édition du tableau de bord -->
+{% if dashboard.owner == user %}
+<div id="editDashboardModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 modal">
+    <div class="srt-modal-content max-w-2xl w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Modifier le Tableau de Bord</h3>
+            <button onclick="closeModal('editDashboardModal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="editDashboardForm" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="srt-form-label">Nom</label>
+                <input type="text" name="name" value="{{ dashboard.name }}" required class="srt-form-input">
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Description</label>
+                <textarea name="description" class="srt-form-input" rows="3">{{ dashboard.description }}</textarea>
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="is_public" {% if dashboard.is_public %}checked{% endif %} class="mr-2">
+                <label class="text-sm text-gray-300">Tableau de bord public</label>
+            </div>
+            
+            <div class="flex justify-end space-x-4 mt-6">
+                <button type="button" onclick="closeModal('editDashboardModal')" class="srt-action-button">Annuler</button>
+                <button type="submit" class="srt-button-primary">Enregistrer</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+    grid-auto-rows: minmax(200px, auto);
+}
+
+.widget-container {
+    min-height: 200px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .widget-container {
+        grid-column: span 1 !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWidgets();
+    
+    {% if dashboard.owner == user %}
+    // Formulaire d'édition
+    document.getElementById('editDashboardForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData.entries());
+        
+        try {
+            // Simuler la mise à jour
+            SRT.notifications.show('success', 'Tableau de bord mis à jour', 'Les modifications ont été enregistrées');
+            closeModal('editDashboardModal');
+            location.reload();
+        } catch (error) {
+            SRT.notifications.show('error', 'Erreur', 'Impossible de mettre à jour le tableau de bord');
+        }
+    });
+    {% endif %}
+});
+
+function initializeWidgets() {
+    // Initialiser chaque widget selon son type
+    {% for widget in widgets %}
+    initializeWidget('{{ widget.id }}', '{{ widget.widget_type }}', {{ widget.config|safe }});
+    {% endfor %}
+}
+
+function initializeWidget(widgetId, type, config) {
+    switch(type) {
+        case 'CHART':
+            initializeChart(widgetId, config);
+            break;
+        case 'TABLE':
+            initializeTable(widgetId, config);
+            break;
+        case 'MAP':
+            initializeMap(widgetId, config);
+            break;
+        case 'COUNTER':
+            initializeCounter(widgetId, config);
+            break;
+        case 'ALERT_FEED':
+            initializeAlertFeed(widgetId, config);
+            break;
+        case 'REPORT_LIST':
+            initializeReportList(widgetId, config);
+            break;
+    }
+}
+
+function initializeChart(widgetId, config) {
+    const ctx = document.getElementById(`chart-${widgetId}`);
+    if (ctx) {
+        // Données d'exemple
+        new Chart(ctx, {
+            type: config.chartType || 'line',
+            data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
+                datasets: [{
+                    label: 'Données',
+                    data: [12, 19, 3, 5, 2, 3],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: 'white' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: 'white' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            }
+        });
+    }
+}
+
+function initializeTable(widgetId, config) {
+    const tbody = document.getElementById(`table-${widgetId}`);
+    if (tbody) {
+        // Données d'exemple
+        tbody.innerHTML = `
+            <tr class="border-b border-gray-700">
+                <td class="py-2 text-white">Rapports critiques</td>
+                <td class="py-2 text-white">5</td>
+                <td class="py-2"><span class="srt-badge srt-badge-danger">Élevé</span></td>
+            </tr>
+            <tr class="border-b border-gray-700">
+                <td class="py-2 text-white">Alertes actives</td>
+                <td class="py-2 text-white">12</td>
+                <td class="py-2"><span class="srt-badge srt-badge-warning">Moyen</span></td>
+            </tr>
+        `;
+    }
+}
+
+function initializeMap(widgetId, config) {
+    const mapContainer = document.getElementById(`map-${widgetId}`);
+    if (mapContainer) {
+        const map = SRT.maps.create(`map-${widgetId}`, {
+            center: [46.603354, 1.888334],
+            zoom: 6
+        });
+    }
+}
+
+function initializeCounter(widgetId, config) {
+    const counter = document.getElementById(`counter-${widgetId}`);
+    if (counter) {
+        // Simuler une valeur
+        counter.textContent = Math.floor(Math.random() * 100);
+    }
+}
+
+function initializeAlertFeed(widgetId, config) {
+    const container = document.getElementById(`alerts-${widgetId}`);
+    if (container) {
+        // Données d'exemple
+        container.innerHTML = `
+            <div class="p-2 bg-red-900/20 border-l-4 border-red-500 rounded-r">
+                <div class="text-sm text-white font-medium">Alerte critique</div>
+                <div class="text-xs text-gray-400">Il y a 5 minutes</div>
+            </div>
+            <div class="p-2 bg-yellow-900/20 border-l-4 border-yellow-500 rounded-r">
+                <div class="text-sm text-white font-medium">Avertissement</div>
+                <div class="text-xs text-gray-400">Il y a 15 minutes</div>
+            </div>
+        `;
+    }
+}
+
+function initializeReportList(widgetId, config) {
+    const container = document.getElementById(`reports-${widgetId}`);
+    if (container) {
+        // Données d'exemple
+        container.innerHTML = `
+            <div class="p-2 bg-slate-700 rounded">
+                <div class="text-sm text-white font-medium">Rapport terrain #001</div>
+                <div class="text-xs text-gray-400">Agent Smith - Il y a 2h</div>
+            </div>
+            <div class="p-2 bg-slate-700 rounded">
+                <div class="text-sm text-white font-medium">Analyse cyber #045</div>
+                <div class="text-xs text-gray-400">Analyste Johnson - Il y a 4h</div>
+            </div>
+        `;
+    }
+}
+
+function refreshDashboard() {
+    SRT.notifications.show('info', 'Actualisation', 'Mise à jour des données du tableau de bord...');
+    
+    // Réinitialiser tous les widgets
+    setTimeout(() => {
+        initializeWidgets();
+        SRT.notifications.show('success', 'Actualisé', 'Tableau de bord mis à jour');
+    }, 1000);
+}
+
+{% if dashboard.owner == user %}
+function addWidget() {
+    SRT.notifications.show('info', 'Ajout de widget', 'Redirection vers la configuration...');
+    // Logique d'ajout de widget
+}
+
+function configureWidget(widgetId) {
+    SRT.notifications.show('info', 'Configuration', `Configuration du widget ${widgetId}...`);
+    // Logique de configuration
+}
+
+function removeWidget(widgetId) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer ce widget ?')) {
+        document.querySelector(`[data-widget-id="${widgetId}"]`).remove();
+        SRT.notifications.show('success', 'Widget supprimé', 'Le widget a été retiré du tableau de bord');
+    }
+}
+{% endif %}
+</script>
+{% endblock %}

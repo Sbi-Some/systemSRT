@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ assessment.title }} - SRT{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'analysis:assessment_list' %}" class="text-blue-400 hover:text-blue-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <div>
+                <h1 class="text-3xl font-bold text-white">{{ assessment.title }}</h1>
+                <p class="text-gray-400 mt-1">Évaluation de menace {{ assessment.get_assessment_type_display|lower }}</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-4">
+            <span class="srt-badge 
+                {% if assessment.status == 'PUBLISHED' %}srt-badge-success
+                {% elif assessment.status == 'APPROVED' %}srt-badge-primary
+                {% elif assessment.status == 'UNDER_REVIEW' %}srt-badge-warning
+                {% else %}srt-badge-secondary{% endif %}">
+                {{ assessment.get_status_display }}
+            </span>
+            
+            {% if assessment.analyst == user or user.rank in 'SUPERVISOR,MANAGER,DIRECTOR,ADMINISTRATOR' %}
+            <a href="#" class="srt-action-button">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Modifier
+            </a>
+            {% endif %}
+            
+            <button onclick="exportAssessment()" class="srt-action-button">
+                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Exporter
+            </button>
+        </div>
+    </div>
+    
+    <!-- Métadonnées -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Analyste</div>
+            <div class="text-white font-medium">{{ assessment.analyst.get_full_name }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Classification</div>
+            <div class="text-white font-medium">{{ assessment.get_classification_level_display }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Créé le</div>
+            <div class="text-white font-medium">{{ assessment.created_at|date:"d/m/Y à H:i" }}</div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="text-sm text-gray-400">Dernière MAJ</div>
+            <div class="text-white font-medium">{{ assessment.updated_at|date:"d/m/Y à H:i" }}</div>
+        </div>
+    </div>
+    
+    <!-- Score de risque -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Évaluation des Risques</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-blue-400 mb-2">{{ assessment.probability_score }}%</div>
+                <div class="text-sm text-gray-400">Probabilité</div>
+                <div class="w-full bg-gray-600 rounded-full h-2 mt-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: {{ assessment.probability_score }}%"></div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-3xl font-bold text-orange-400 mb-2">{{ assessment.impact_score }}%</div>
+                <div class="text-sm text-gray-400">Impact</div>
+                <div class="w-full bg-gray-600 rounded-full h-2 mt-2">
+                    <div class="bg-orange-500 h-2 rounded-full" style="width: {{ assessment.impact_score }}%"></div>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <div class="text-4xl font-bold 
+                    {% if assessment.get_risk_score >= 80 %}text-red-400
+                    {% elif assessment.get_risk_score >= 60 %}text-orange-400
+                    {% elif assessment.get_risk_score >= 40 %}text-yellow-400
+                    {% else %}text-green-400{% endif %} mb-2">
+                    {{ assessment.get_risk_score }}%
+                </div>
+                <div class="text-sm text-gray-400">Risque Global</div>
+                <div class="w-full bg-gray-600 rounded-full h-3 mt-2">
+                    <div class="h-3 rounded-full 
+                        {% if assessment.get_risk_score >= 80 %}bg-red-500
+                        {% elif assessment.get_risk_score >= 60 %}bg-orange-500
+                        {% elif assessment.get_risk_score >= 40 %}bg-yellow-500
+                        {% else %}bg-green-500{% endif %}"
+                        style="width: {{ assessment.get_risk_score }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Résumé exécutif -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Résumé Exécutif</h2>
+        <div class="prose prose-invert max-w-none">
+            <p class="text-gray-300 leading-relaxed">{{ assessment.executive_summary|linebreaks }}</p>
+        </div>
+    </div>
+    
+    <!-- Analyse détaillée -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Analyse Détaillée</h2>
+        <div class="prose prose-invert max-w-none">
+            <div class="text-gray-300 leading-relaxed">{{ assessment.detailed_analysis|linebreaks }}</div>
+        </div>
+    </div>
+    
+    <!-- Conclusions clés -->
+    {% if assessment.key_findings %}
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Conclusions Clés</h2>
+        <div class="space-y-3">
+            {% for finding in assessment.key_findings %}
+            <div class="flex items-start space-x-3">
+                <div class="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                <p class="text-gray-300">{{ finding }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recommandations -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Recommandations</h2>
+        <div class="prose prose-invert max-w-none">
+            <div class="text-gray-300 leading-relaxed">{{ assessment.recommendations|linebreaks }}</div>
+        </div>
+    </div>
+    
+    <!-- Période de validité -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Période de Validité</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <div class="text-sm text-gray-400">Valide à partir du</div>
+                <div class="text-white font-medium">{{ assessment.valid_from|date:"d/m/Y à H:i" }}</div>
+            </div>
+            <div>
+                <div class="text-sm text-gray-400">Valide jusqu'au</div>
+                <div class="text-white font-medium">{{ assessment.valid_until|date:"d/m/Y à H:i" }}</div>
+            </div>
+        </div>
+        
+        {% if assessment.valid_until < now %}
+        <div class="mt-4 p-3 bg-red-900/20 border border-red-500 rounded-lg">
+            <div class="flex items-center text-red-400">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+                Cette évaluation a expiré
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Catégories et groupes associés -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% if assessment.threat_categories.exists %}
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Catégories de Menaces</h2>
+            <div class="flex flex-wrap gap-2">
+                {% for category in assessment.threat_categories.all %}
+                <span class="srt-badge srt-badge-primary">{{ category.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if assessment.hostile_groups.exists %}
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Groupes Hostiles</h2>
+            <div class="space-y-2">
+                {% for group in assessment.hostile_groups.all %}
+                <div class="flex items-center justify-between p-2 bg-slate-700 rounded">
+                    <span class="text-white">{{ group.name }}</span>
+                    <span class="srt-badge threat-{{ group.threat_level|lower }}">
+                        {{ group.get_threat_level_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Révision -->
+    {% if assessment.reviewed_by %}
+    <div class="srt-card p-6 border-l-4 border-green-500">
+        <h2 class="text-xl font-bold text-white mb-4">Révision</h2>
+        <div class="flex items-center space-x-4">
+            <div class="text-green-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div>
+                <div class="text-white font-medium">Révisé par {{ assessment.reviewed_by.get_full_name }}</div>
+                <div class="text-sm text-gray-400">{{ assessment.reviewed_by.rank }} - {{ assessment.reviewed_by.department }}</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function exportAssessment() {
+    SRT.notifications.show('info', 'Export en cours', 'Génération du rapport PDF...');
+    
+    // Simuler l'export
+    setTimeout(() => {
+        SRT.notifications.show('success', 'Export terminé', 'Le rapport a été téléchargé');
+    }, 2000);
+}
+</script>
+{% endblock %}

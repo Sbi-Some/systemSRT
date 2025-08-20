@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.get_full_name }} - SRT{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <a href="{% url 'authentication:user_list' %}" class="text-blue-400 hover:text-blue-300">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </a>
+            <div class="flex items-center space-x-4">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span class="text-white text-xl font-bold">
+                        {{ profile_user.first_name.0|default:profile_user.username.0|upper }}
+                    </span>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-white">{{ profile_user.get_full_name }}</h1>
+                    <p class="text-gray-400">{{ profile_user.get_rank_display }} - {{ profile_user.department|default:"Département non spécifié" }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            {% if profile_user.is_active %}
+                <span class="srt-status-indicator srt-status-online"></span>
+                <span class="text-green-400">Actif</span>
+            {% else %}
+                <span class="srt-status-indicator srt-status-offline"></span>
+                <span class="text-gray-400">Inactif</span>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Informations générales -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Informations Personnelles</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="text-sm text-gray-400">Nom d'utilisateur</div>
+                    <div class="text-white font-medium">{{ profile_user.username }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">ID Employé</div>
+                    <div class="text-white font-medium font-mono">{{ profile_user.employee_id }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Email</div>
+                    <div class="text-white font-medium">{{ profile_user.email }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Téléphone</div>
+                    <div class="text-white font-medium">{{ profile_user.phone_number }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Type d'agent</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.is_field_agent %}
+                            <span class="srt-badge srt-badge-primary">Agent de terrain</span>
+                        {% else %}
+                            <span class="srt-badge srt-badge-secondary">Agent de bureau</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Informations Professionnelles</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="text-sm text-gray-400">Rang</div>
+                    <div class="text-white font-medium">
+                        <span class="srt-badge 
+                            {% if profile_user.rank == 'ADMINISTRATOR' %}srt-badge-danger
+                            {% elif profile_user.rank == 'DIRECTOR' %}srt-badge-warning
+                            {% elif profile_user.rank == 'MANAGER' %}srt-badge-primary
+                            {% else %}srt-badge-success{% endif %}">
+                            {{ profile_user.get_rank_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Habilitation de sécurité</div>
+                    <div class="text-white font-medium">
+                        <span class="text-xs px-3 py-1 rounded-full font-medium
+                            {% if profile_user.security_clearance == 'TOP_SECRET' %}bg-red-900 text-red-200
+                            {% elif profile_user.security_clearance == 'SECRET' %}bg-orange-900 text-orange-200
+                            {% elif profile_user.security_clearance == 'CONFIDENTIAL' %}bg-yellow-900 text-yellow-200
+                            {% else %}bg-green-900 text-green-200{% endif %}">
+                            {{ profile_user.get_security_clearance_display }}
+                        </span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Département</div>
+                    <div class="text-white font-medium">{{ profile_user.department|default:"Non spécifié" }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Membre du personnel</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.is_staff %}
+                            <span class="text-green-400">Oui</span>
+                        {% else %}
+                            <span class="text-gray-400">Non</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Superutilisateur</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.is_superuser %}
+                            <span class="text-red-400">Oui</span>
+                        {% else %}
+                            <span class="text-gray-400">Non</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Activité et sécurité -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Activité</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="text-sm text-gray-400">Dernière activité</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.last_activity %}
+                            {{ profile_user.last_activity|date:"d/m/Y à H:i" }}
+                            <span class="text-gray-400 text-sm">({{ profile_user.last_activity|timesince }} ago)</span>
+                        {% else %}
+                            <span class="text-gray-400">Jamais connecté</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Date de création</div>
+                    <div class="text-white font-medium">{{ profile_user.date_joined|date:"d/m/Y à H:i" }}</div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Dernière connexion</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.last_login %}
+                            {{ profile_user.last_login|date:"d/m/Y à H:i" }}
+                        {% else %}
+                            <span class="text-gray-400">Jamais connecté</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Sécurité</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <div class="text-sm text-gray-400">Tentatives de connexion échouées</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.failed_login_attempts > 0 %}
+                            <span class="text-red-400">{{ profile_user.failed_login_attempts }}</span>
+                        {% else %}
+                            <span class="text-green-400">0</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Compte verrouillé</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.is_account_locked %}
+                            <span class="text-red-400">Oui</span>
+                            {% if profile_user.account_locked_until %}
+                                <div class="text-xs text-gray-400">Jusqu'au {{ profile_user.account_locked_until|date:"d/m/Y à H:i" }}</div>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-green-400">Non</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Dernier changement de mot de passe</div>
+                    <div class="text-white font-medium">
+                        {{ profile_user.password_last_changed|date:"d/m/Y à H:i" }}
+                        <span class="text-gray-400 text-sm">({{ profile_user.password_last_changed|timesince }} ago)</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="text-sm text-gray-400">Authentification à deux facteurs</div>
+                    <div class="text-white font-medium">
+                        {% if profile_user.two_factor_secret %}
+                            <span class="text-green-400">Activée</span>
+                        {% else %}
+                            <span class="text-gray-400">Désactivée</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sessions actives -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Sessions Actives</h2>
+        
+        {% if user_sessions %}
+        <div class="space-y-3">
+            {% for session in user_sessions %}
+            <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                <div class="flex items-center space-x-3">
+                    <div class="srt-status-indicator srt-status-online"></div>
+                    <div>
+                        <div class="text-white font-medium">{{ session.ip_address }}</div>
+                        <div class="text-sm text-gray-400">
+                            Créée le {{ session.created_at|date:"d/m/Y à H:i" }} - 
+                            Dernière activité: {{ session.last_activity|timesince }} ago
+                        </div>
+                    </div>
+                </div>
+                
+                {% if user.rank == 'ADMINISTRATOR' %}
+                <button onclick="terminateSession('{{ session.id }}')" 
+                        class="text-red-400 hover:text-red-300 text-sm">
+                    Terminer
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-400">
+            <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+            </svg>
+            <p>Aucune session active</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Tentatives d'accès récentes -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-4">Tentatives d'Accès Récentes</h2>
+        
+        {% if recent_access_attempts %}
+        <div class="srt-table">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Date/Heure</th>
+                        <th class="text-left">Type</th>
+                        <th class="text-left">IP</th>
+                        <th class="text-left">Résultat</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in recent_access_attempts %}
+                    <tr>
+                        <td class="text-sm text-gray-300">
+                            {{ attempt.timestamp|date:"d/m/Y H:i:s" }}
+                        </td>
+                        <td class="text-sm text-white">
+                            {{ attempt.get_attempt_type_display }}
+                        </td>
+                        <td class="text-sm text-gray-300 font-mono">
+                            {{ attempt.ip_address }}
+                        </td>
+                        <td>
+                            {% if attempt.success %}
+                                <span class="srt-badge srt-badge-success">Succès</span>
+                            {% else %}
+                                <span class="srt-badge srt-badge-danger">Échec</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8 text-gray-400">
+            <p>Aucune tentative d'accès récente</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+{% if user.rank == 'ADMINISTRATOR' %}
+function terminateSession(sessionId) {
+    if (confirm('Êtes-vous sûr de vouloir terminer cette session ?')) {
+        // Logique de terminaison de session
+        SRT.notifications.show('success', 'Session terminée', 'La session a été terminée avec succès');
+        location.reload();
+    }
+}
+{% endif %}
+</script>
+{% endblock %}

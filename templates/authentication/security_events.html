@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Événements de Sécurité - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Mes Événements de Sécurité</h1>
+            <p class="text-gray-400 mt-1">Historique de vos activités et événements de sécurité</p>
+        </div>
+        
+        {% if can_view_all %}
+        <div class="text-sm text-green-400 bg-green-900/20 px-3 py-1 rounded-full">
+            Vue Administrateur - Tous les événements
+        </div>
+        {% else %}
+        <div class="text-sm text-blue-400 bg-blue-900/20 px-3 py-1 rounded-full">
+            Vos événements uniquement
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Statistiques rapides -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="srt-card p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-400">Connexions réussies</div>
+                    <div class="text-xl font-bold text-white" id="successfulLogins">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-400">Échecs de connexion</div>
+                    <div class="text-xl font-bold text-white" id="failedLogins">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-400">Accès refusés</div>
+                    <div class="text-xl font-bold text-white" id="deniedAccess">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="srt-card p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-400">Total événements</div>
+                    <div class="text-xl font-bold text-white" id="totalEvents">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filtres -->
+    <div class="srt-card p-4">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="srt-form-label">Type d'événement</label>
+                <select name="event_type" class="srt-form-input">
+                    <option value="">Tous les types</option>
+                    <option value="LOGIN">Connexion</option>
+                    <option value="LOGOUT">Déconnexion</option>
+                    <option value="FAILED_LOGIN">Échec connexion</option>
+                    <option value="PASSWORD_CHANGE">Changement mot de passe</option>
+                    <option value="PERMISSION_DENIED">Accès refusé</option>
+                    <option value="DATA_ACCESS">Accès aux données</option>
+                    <option value="DATA_MODIFICATION">Modification données</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Sévérité</label>
+                <select name="severity" class="srt-form-input">
+                    <option value="">Toutes les sévérités</option>
+                    <option value="LOW">Faible</option>
+                    <option value="MEDIUM">Moyen</option>
+                    <option value="HIGH">Élevé</option>
+                    <option value="CRITICAL">Critique</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Période</label>
+                <select name="period" class="srt-form-input">
+                    <option value="">Toute la période</option>
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week">Cette semaine</option>
+                    <option value="month">Ce mois</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button type="submit" class="srt-button-primary w-full">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+                    </svg>
+                    Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Timeline des événements -->
+    <div class="srt-card p-6">
+        <h2 class="text-xl font-bold text-white mb-6">Timeline des Événements</h2>
+        
+        <div class="space-y-4">
+            {% for event in events %}
+            <div class="flex items-start space-x-4">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-3 h-3 rounded-full 
+                        {% if event.severity == 'CRITICAL' %}bg-red-500
+                        {% elif event.severity == 'HIGH' %}bg-orange-500
+                        {% elif event.severity == 'MEDIUM' %}bg-yellow-500
+                        {% else %}bg-green-500{% endif %}"></div>
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <h3 class="text-sm font-medium text-white">
+                                {{ event.get_event_type_display }}
+                            </h3>
+                            <span class="srt-badge 
+                                {% if event.severity == 'CRITICAL' %}srt-badge-danger
+                                {% elif event.severity == 'HIGH' %}srt-badge-warning
+                                {% elif event.severity == 'MEDIUM' %}srt-badge-primary
+                                {% else %}srt-badge-success{% endif %}">
+                                {{ event.get_severity_display }}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-400">
+                            {{ event.timestamp|date:"d/m/Y H:i:s" }}
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-gray-300 mt-1">{{ event.description }}</p>
+                    
+                    <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span class="flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                            </svg>
+                            {{ event.ip_address }}
+                        </span>
+                        
+                        {% if event.user_agent %}
+                        <span class="flex items-center truncate max-w-xs">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                            </svg>
+                            {{ event.user_agent|truncatechars:50 }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if event.investigated %}
+                        <span class="flex items-center text-green-400">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Traité
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if event.additional_data %}
+                    <details class="mt-2">
+                        <summary class="text-xs text-blue-400 cursor-pointer hover:text-blue-300">
+                            Détails techniques
+                        </summary>
+                        <pre class="text-xs text-gray-400 mt-1 bg-slate-800 p-2 rounded overflow-x-auto">{{ event.additional_data|pprint }}</pre>
+                    </details>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if not forloop.last %}
+            <div class="ml-1.5 w-0.5 h-4 bg-gray-600"></div>
+            {% endif %}
+            
+            {% empty %}
+            <div class="text-center py-8 text-gray-400">
+                <svg class="mx-auto h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-white mb-2">Aucun événement</h3>
+                <p>Aucun événement de sécurité ne correspond aux critères sélectionnés.</p>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="flex justify-center mt-8">
+            <div class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="srt-action-button">Précédent</a>
+                {% endif %}
+                <span class="px-4 py-2 text-gray-400">
+                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="srt-action-button">Suivant</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Calculer les statistiques depuis les événements affichés
+    updateEventStatistics();
+});
+
+function updateEventStatistics() {
+    // Compter les différents types d'événements
+    const events = document.querySelectorAll('[data-event-type]');
+    let successfulLogins = 0;
+    let failedLogins = 0;
+    let deniedAccess = 0;
+    let totalEvents = events.length;
+    
+    events.forEach(event => {
+        const type = event.getAttribute('data-event-type');
+        switch(type) {
+            case 'LOGIN':
+                successfulLogins++;
+                break;
+            case 'FAILED_LOGIN':
+                failedLogins++;
+                break;
+            case 'PERMISSION_DENIED':
+                deniedAccess++;
+                break;
+        }
+    });
+    
+    // Mettre à jour l'affichage
+    document.getElementById('successfulLogins').textContent = successfulLogins;
+    document.getElementById('failedLogins').textContent = failedLogins;
+    document.getElementById('deniedAccess').textContent = deniedAccess;
+    document.getElementById('totalEvents').textContent = totalEvents;
+}
+</script>
+{% endblock %}

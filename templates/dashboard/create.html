@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer un Tableau de Bord - SRT{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center space-x-4">
+        <a href="{% url 'dashboard:home' %}" class="text-blue-400 hover:text-blue-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-white">Créer un Tableau de Bord</h1>
+    </div>
+    
+    <!-- Formulaire de création -->
+    <form method="post" class="space-y-6" id="dashboardForm">
+        {% csrf_token %}
+        
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Informations Générales</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="srt-form-label">Nom du tableau de bord</label>
+                    <input type="text" name="name" required class="srt-form-input" 
+                           placeholder="Mon tableau de bord personnalisé">
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Description</label>
+                    <textarea name="description" class="srt-form-input" rows="3"
+                              placeholder="Description optionnelle du tableau de bord"></textarea>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" name="is_public" id="is_public" class="mr-2">
+                    <label for="is_public" class="text-sm text-gray-300">
+                        Rendre ce tableau de bord public (visible par tous les utilisateurs)
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sélection des widgets -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Widgets Disponibles</h2>
+            <p class="text-gray-400 mb-6">Sélectionnez les widgets que vous souhaitez ajouter à votre tableau de bord</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Widget Graphique -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="CHART">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Graphique</h3>
+                            <p class="text-sm text-gray-400">Graphiques et statistiques</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche des données sous forme de graphiques (barres, lignes, secteurs)
+                    </div>
+                </div>
+                
+                <!-- Widget Tableau -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="TABLE">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0V4a1 1 0 011-1h12a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Tableau</h3>
+                            <p class="text-sm text-gray-400">Données tabulaires</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche des données sous forme de tableau avec tri et filtrage
+                    </div>
+                </div>
+                
+                <!-- Widget Carte -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="MAP">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Carte</h3>
+                            <p class="text-sm text-gray-400">Visualisation géographique</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche des données géolocalisées sur une carte interactive
+                    </div>
+                </div>
+                
+                <!-- Widget Compteur -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="COUNTER">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Compteur</h3>
+                            <p class="text-sm text-gray-400">Métriques numériques</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche des valeurs numériques importantes avec indicateurs
+                    </div>
+                </div>
+                
+                <!-- Widget Flux d'Alertes -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="ALERT_FEED">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Flux d'Alertes</h3>
+                            <p class="text-sm text-gray-400">Alertes en temps réel</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche les alertes actives et récentes du système
+                    </div>
+                </div>
+                
+                <!-- Widget Liste de Rapports -->
+                <div class="widget-option p-4 border-2 border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors"
+                     data-widget-type="REPORT_LIST">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-white font-medium">Liste de Rapports</h3>
+                            <p class="text-sm text-gray-400">Rapports récents</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                        Affiche la liste des rapports de renseignement récents
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Widgets sélectionnés -->
+            <div id="selectedWidgets" class="mt-6">
+                <h3 class="text-lg font-medium text-white mb-3">Widgets Sélectionnés</h3>
+                <div id="widgetsList" class="space-y-2">
+                    <!-- Les widgets sélectionnés apparaîtront ici -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Configuration de la mise en page -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Configuration de la Mise en Page</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="srt-form-label">Nombre de colonnes</label>
+                    <select name="columns" class="srt-form-input" id="columnsSelect">
+                        <option value="1">1 colonne</option>
+                        <option value="2">2 colonnes</option>
+                        <option value="3" selected>3 colonnes</option>
+                        <option value="4">4 colonnes</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Espacement</label>
+                    <select name="spacing" class="srt-form-input">
+                        <option value="compact">Compact</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="spacious">Spacieux</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Aperçu de la mise en page -->
+            <div class="mt-6">
+                <h3 class="text-sm font-medium text-gray-400 mb-3">Aperçu de la mise en page</h3>
+                <div id="layoutPreview" class="border-2 border-dashed border-gray-600 rounded-lg p-4 min-h-32">
+                    <div class="grid grid-cols-3 gap-4 h-24">
+                        <div class="bg-slate-700 rounded opacity-50"></div>
+                        <div class="bg-slate-700 rounded opacity-50"></div>
+                        <div class="bg-slate-700 rounded opacity-50"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex justify-between items-center">
+            <a href="{% url 'dashboard:home' %}" class="srt-action-button">
+                Annuler
+            </a>
+            
+            <div class="space-x-4">
+                <button type="button" onclick="previewDashboard()" class="srt-action-button">
+                    Aperçu
+                </button>
+                <button type="submit" class="srt-button-primary">
+                    Créer le Tableau de Bord
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let selectedWidgets = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de la sélection des widgets
+    document.querySelectorAll('.widget-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const widgetType = this.getAttribute('data-widget-type');
+            const widgetName = this.querySelector('h3').textContent;
+            
+            if (this.classList.contains('border-blue-500')) {
+                // Désélectionner
+                this.classList.remove('border-blue-500', 'bg-blue-900/20');
+                this.classList.add('border-gray-600');
+                removeWidget(widgetType);
+            } else {
+                // Sélectionner
+                this.classList.remove('border-gray-600');
+                this.classList.add('border-blue-500', 'bg-blue-900/20');
+                addWidget(widgetType, widgetName);
+            }
+        });
+    });
+    
+    // Gestion du changement de colonnes
+    document.getElementById('columnsSelect').addEventListener('change', function() {
+        updateLayoutPreview();
+    });
+    
+    updateLayoutPreview();
+});
+
+function addWidget(type, name) {
+    if (!selectedWidgets.find(w => w.type === type)) {
+        selectedWidgets.push({ type, name });
+        updateSelectedWidgetsList();
+    }
+}
+
+function removeWidget(type) {
+    selectedWidgets = selectedWidgets.filter(w => w.type !== type);
+    updateSelectedWidgetsList();
+}
+
+function updateSelectedWidgetsList() {
+    const container = document.getElementById('widgetsList');
+    
+    if (selectedWidgets.length === 0) {
+        container.innerHTML = '<p class="text-gray-400 text-sm">Aucun widget sélectionné</p>';
+        return;
+    }
+    
+    container.innerHTML = selectedWidgets.map(widget => `
+        <div class="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+            <span class="text-white">${widget.name}</span>
+            <button type="button" onclick="removeWidgetFromList('${widget.type}')" 
+                    class="text-red-400 hover:text-red-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+            </button>
+        </div>
+    `).join('');
+}
+
+function removeWidgetFromList(type) {
+    // Désélectionner visuellement
+    const option = document.querySelector(`[data-widget-type="${type}"]`);
+    if (option) {
+        option.classList.remove('border-blue-500', 'bg-blue-900/20');
+        option.classList.add('border-gray-600');
+    }
+    
+    removeWidget(type);
+}
+
+function updateLayoutPreview() {
+    const columns = parseInt(document.getElementById('columnsSelect').value);
+    const preview = document.getElementById('layoutPreview');
+    
+    preview.innerHTML = `
+        <div class="grid grid-cols-${columns} gap-4 h-24">
+            ${Array(columns).fill().map(() => '<div class="bg-slate-700 rounded opacity-50"></div>').join('')}
+        </div>
+    `;
+}
+
+function previewDashboard() {
+    if (selectedWidgets.length === 0) {
+        SRT.notifications.show('warning', 'Aucun widget', 'Veuillez sélectionner au moins un widget pour l\'aperçu');
+        return;
+    }
+    
+    SRT.notifications.show('info', 'Aperçu', 'Génération de l\'aperçu du tableau de bord...');
+    // Logique d'aperçu
+}
+
+// Validation du formulaire
+document.getElementById('dashboardForm').addEventListener('submit', function(e) {
+    if (selectedWidgets.length === 0) {
+        e.preventDefault();
+        SRT.notifications.show('error', 'Erreur', 'Veuillez sélectionner au moins un widget');
+        return;
+    }
+    
+    // Ajouter les widgets sélectionnés au formulaire
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'selected_widgets';
+    input.value = JSON.stringify(selectedWidgets);
+    this.appendChild(input);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}
+{% if object %}Modifier l'Évaluation{% else %}Nouvelle Évaluation{% endif %} - SRT
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center space-x-4">
+        <a href="{% url 'analysis:assessment_list' %}" class="text-blue-400 hover:text-blue-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </a>
+        <h1 class="text-3xl font-bold text-white">
+            {% if object %}Modifier l'Évaluation de Menace{% else %}Nouvelle Évaluation de Menace{% endif %}
+        </h1>
+    </div>
+    
+    <!-- Formulaire -->
+    <form method="post" class="space-y-6" id="assessmentForm">
+        {% csrf_token %}
+        
+        <!-- Informations générales -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Informations Générales</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="md:col-span-2">
+                    <label class="srt-form-label">Titre de l'évaluation</label>
+                    <input type="text" name="title" required class="srt-form-input" 
+                           placeholder="Titre descriptif de l'évaluation"
+                           value="{% if object %}{{ object.title }}{% endif %}">
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Type d'évaluation</label>
+                    <select name="assessment_type" required class="srt-form-input">
+                        <option value="IMMEDIATE">Immédiate</option>
+                        <option value="SHORT_TERM">Court terme</option>
+                        <option value="MEDIUM_TERM">Moyen terme</option>
+                        <option value="LONG_TERM">Long terme</option>
+                        <option value="STRATEGIC">Stratégique</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Niveau de classification</label>
+                    <select name="classification_level" required class="srt-form-input">
+                        <option value="RESTRICTED">Restreint</option>
+                        <option value="CONFIDENTIAL">Confidentiel</option>
+                        <option value="SECRET">Secret</option>
+                        <option value="TOP_SECRET">Très Secret</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Résumé exécutif -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Résumé Exécutif</h2>
+            <textarea name="executive_summary" required class="srt-form-input" rows="4"
+                      placeholder="Résumé concis de l'évaluation pour les décideurs">{% if object %}{{ object.executive_summary }}{% endif %}</textarea>
+        </div>
+        
+        <!-- Analyse détaillée -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Analyse Détaillée</h2>
+            <textarea name="detailed_analysis" required class="srt-form-input" rows="8"
+                      placeholder="Analyse approfondie de la situation et des menaces identifiées">{% if object %}{{ object.detailed_analysis }}{% endif %}</textarea>
+        </div>
+        
+        <!-- Conclusions clés -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Conclusions Clés</h2>
+            <div id="keyFindingsContainer">
+                <div class="space-y-2" id="findingsList">
+                    <!-- Les conclusions seront ajoutées dynamiquement -->
+                </div>
+                <button type="button" onclick="addFinding()" class="srt-action-button mt-2">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Ajouter une conclusion
+                </button>
+            </div>
+        </div>
+        
+        <!-- Recommandations -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Recommandations</h2>
+            <textarea name="recommendations" required class="srt-form-input" rows="6"
+                      placeholder="Recommandations d'actions à entreprendre">{% if object %}{{ object.recommendations }}{% endif %}</textarea>
+        </div>
+        
+        <!-- Évaluation des risques -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Évaluation des Risques</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="srt-form-label">Score de Probabilité (%)</label>
+                    <div class="space-y-2">
+                        <input type="range" name="probability_score" min="1" max="100" value="50" 
+                               class="w-full" id="probabilityRange">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>Très faible</span>
+                            <span id="probabilityValue" class="font-medium text-white">50%</span>
+                            <span>Très élevée</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Score d'Impact (%)</label>
+                    <div class="space-y-2">
+                        <input type="range" name="impact_score" min="1" max="100" value="50" 
+                               class="w-full" id="impactRange">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>Très faible</span>
+                            <span id="impactValue" class="font-medium text-white">50%</span>
+                            <span>Très élevé</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Calcul automatique du risque -->
+            <div class="mt-6 p-4 bg-slate-700 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <span class="text-white font-medium">Score de Risque Global:</span>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-32 bg-gray-600 rounded-full h-3">
+                            <div id="riskBar" class="h-3 rounded-full bg-yellow-500" style="width: 25%"></div>
+                        </div>
+                        <span id="riskScore" class="text-xl font-bold text-white">25%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Période de validité -->
+        <div class="srt-card p-6">
+            <h2 class="text-xl font-bold text-white mb-4">Période de Validité</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="srt-form-label">Valide à partir du</label>
+                    <input type="datetime-local" name="valid_from" required class="srt-form-input">
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Valide jusqu'au</label>
+                    <input type="datetime-local" name="valid_until" required class="srt-form-input">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex justify-between items-center">
+            <a href="{% url 'analysis:assessment_list' %}" class="srt-action-button">
+                Annuler
+            </a>
+            
+            <div class="space-x-4">
+                <button type="submit" name="status" value="DRAFT" class="srt-action-button">
+                    Enregistrer comme brouillon
+                </button>
+                <button type="submit" name="status" value="UNDER_REVIEW" class="srt-button-primary">
+                    {% if object %}Mettre à jour{% else %}Soumettre pour révision{% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let findingCounter = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les sliders
+    updateRiskCalculation();
+    
+    // Écouter les changements des sliders
+    document.getElementById('probabilityRange').addEventListener('input', function() {
+        document.getElementById('probabilityValue').textContent = this.value + '%';
+        updateRiskCalculation();
+    });
+    
+    document.getElementById('impactRange').addEventListener('input', function() {
+        document.getElementById('impactValue').textContent = this.value + '%';
+        updateRiskCalculation();
+    });
+    
+    // Initialiser avec une conclusion vide
+    addFinding();
+});
+
+function updateRiskCalculation() {
+    const probability = parseInt(document.getElementById('probabilityRange').value);
+    const impact = parseInt(document.getElementById('impactRange').value);
+    const risk = Math.round((probability * impact) / 100);
+    
+    document.getElementById('riskScore').textContent = risk + '%';
+    
+    const riskBar = document.getElementById('riskBar');
+    riskBar.style.width = risk + '%';
+    
+    // Changer la couleur selon le niveau de risque
+    if (risk >= 80) {
+        riskBar.className = 'h-3 rounded-full bg-red-500';
+    } else if (risk >= 60) {
+        riskBar.className = 'h-3 rounded-full bg-orange-500';
+    } else if (risk >= 40) {
+        riskBar.className = 'h-3 rounded-full bg-yellow-500';
+    } else {
+        riskBar.className = 'h-3 rounded-full bg-green-500';
+    }
+}
+
+function addFinding() {
+    const container = document.getElementById('findingsList');
+    const findingDiv = document.createElement('div');
+    findingDiv.className = 'flex items-center space-x-2';
+    findingDiv.innerHTML = `
+        <input type="text" name="key_findings[]" class="srt-form-input flex-1" 
+               placeholder="Conclusion clé #${findingCounter + 1}">
+        <button type="button" onclick="removeFinding(this)" class="text-red-400 hover:text-red-300">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+        </button>
+    `;
+    container.appendChild(findingDiv);
+    findingCounter++;
+}
+
+function removeFinding(button) {
+    button.parentElement.remove();
+}
+
+// Validation du formulaire
+document.getElementById('assessmentForm').addEventListener('submit', function(e) {
+    if (!SRT.forms.validate(this)) {
+        e.preventDefault();
+        SRT.notifications.show('error', 'Erreur de validation', 
+            'Veuillez corriger les erreurs dans le formulaire');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}Alertes - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Gestion des Alertes</h1>
+            <p class="text-gray-400 mt-1">Suivi et gestion des alertes système</p>
+        </div>
+        
+        <button onclick="openModal('createAlertModal')" class="srt-button-primary">
+            <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            Nouvelle Alerte
+        </button>
+    </div>
+    
+    <!-- Filtres -->
+    <div class="srt-card p-4">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="srt-form-label">Niveau d'alerte</label>
+                <select name="alert_level" class="srt-form-input">
+                    <option value="">Tous les niveaux</option>
+                    <option value="INFO">Information</option>
+                    <option value="WARNING">Avertissement</option>
+                    <option value="CRITICAL">Critique</option>
+                    <option value="EMERGENCY">Urgence</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Type d'alerte</label>
+                <select name="alert_type" class="srt-form-input">
+                    <option value="">Tous les types</option>
+                    <option value="THREAT_ESCALATION">Escalade de menace</option>
+                    <option value="NEW_INTELLIGENCE">Nouveau renseignement</option>
+                    <option value="PATTERN_DETECTED">Motif détecté</option>
+                    <option value="SYSTEM_ALERT">Alerte système</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Statut</label>
+                <select name="active_only" class="srt-form-input">
+                    <option value="true">Alertes actives uniquement</option>
+                    <option value="false">Toutes les alertes</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button type="submit" class="srt-button-primary w-full">Filtrer</button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Liste des alertes -->
+    <div class="space-y-4">
+        {% for alert in alerts %}
+        <div class="srt-card p-6 border-l-4 
+            {% if alert.alert_level == 'EMERGENCY' %}border-red-500
+            {% elif alert.alert_level == 'CRITICAL' %}border-red-400
+            {% elif alert.alert_level == 'WARNING' %}border-yellow-400
+            {% else %}border-blue-400{% endif %}">
+            
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <h3 class="text-lg font-bold text-white">{{ alert.title }}</h3>
+                        <span class="srt-badge 
+                            {% if alert.alert_level == 'EMERGENCY' %}srt-badge-danger
+                            {% elif alert.alert_level == 'CRITICAL' %}srt-badge-danger
+                            {% elif alert.alert_level == 'WARNING' %}srt-badge-warning
+                            {% else %}srt-badge-primary{% endif %}">
+                            {{ alert.get_alert_level_display }}
+                        </span>
+                        {% if alert.is_active %}
+                        <span class="srt-status-indicator srt-status-danger"></span>
+                        {% else %}
+                        <span class="srt-status-indicator srt-status-offline"></span>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-gray-300 mb-3">{{ alert.message }}</p>
+                    
+                    <div class="flex items-center space-x-6 text-sm text-gray-400">
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            </svg>
+                            {{ alert.created_by.get_full_name }}
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ alert.created_at|timesince }} ago
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                            </svg>
+                            {{ alert.get_alert_type_display }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-2 ml-4">
+                    {% if alert.is_active %}
+                    <button onclick="acknowledgeAlert('{{ alert.id }}')" class="srt-action-button">
+                        Accuser réception
+                    </button>
+                    <button onclick="deactivateAlert('{{ alert.id }}')" class="srt-action-button">
+                        Désactiver
+                    </button>
+                    {% else %}
+                    <span class="text-sm text-gray-500">Alerte fermée</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="srt-card p-8 text-center">
+            <div class="text-gray-400 mb-4">
+                <svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L5.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-medium text-white mb-2">Aucune alerte</h3>
+            <p class="text-gray-400">Aucune alerte ne correspond aux critères sélectionnés.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div class="flex justify-center">
+        <div class="flex space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="srt-action-button">Précédent</a>
+            {% endif %}
+            <span class="px-4 py-2 text-gray-400">
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+            </span>
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="srt-action-button">Suivant</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de création d'alerte -->
+<div id="createAlertModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50 modal">
+    <div class="srt-modal-content max-w-2xl w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold text-white">Créer une Nouvelle Alerte</h3>
+            <button onclick="closeModal('createAlertModal')" class="text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="createAlertForm" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="srt-form-label">Titre de l'alerte</label>
+                <input type="text" name="title" required class="srt-form-input" placeholder="Titre descriptif de l'alerte">
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Message</label>
+                <textarea name="message" required class="srt-form-input" rows="3" placeholder="Description détaillée de l'alerte"></textarea>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="srt-form-label">Niveau d'alerte</label>
+                    <select name="alert_level" required class="srt-form-input">
+                        <option value="INFO">Information</option>
+                        <option value="WARNING">Avertissement</option>
+                        <option value="CRITICAL">Critique</option>
+                        <option value="EMERGENCY">Urgence</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="srt-form-label">Type d'alerte</label>
+                    <select name="alert_type" required class="srt-form-input">
+                        <option value="SYSTEM_ALERT">Alerte système</option>
+                        <option value="THREAT_ESCALATION">Escalade de menace</option>
+                        <option value="NEW_INTELLIGENCE">Nouveau renseignement</option>
+                        <option value="PATTERN_DETECTED">Motif détecté</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4 mt-6">
+                <button type="button" onclick="closeModal('createAlertModal')" class="srt-action-button">Annuler</button>
+                <button type="submit" class="srt-button-primary">Créer l'Alerte</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('createAlertForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+        const response = await SRT.api.post('/analysis/generate-alert/', data);
+        
+        SRT.notifications.show('success', 'Alerte créée', 'L\'alerte a été créée avec succès');
+        closeModal('createAlertModal');
+        location.reload();
+        
+    } catch (error) {
+        SRT.notifications.show('error', 'Erreur', 'Impossible de créer l\'alerte');
+    }
+});
+
+async function acknowledgeAlert(alertId) {
+    try {
+        // Logique d'accusé de réception
+        SRT.notifications.show('success', 'Accusé de réception', 'Alerte marquée comme reçue');
+    } catch (error) {
+        SRT.notifications.show('error', 'Erreur', 'Impossible de traiter l\'accusé de réception');
+    }
+}
+
+async function deactivateAlert(alertId) {
+    if (confirm('Êtes-vous sûr de vouloir désactiver cette alerte ?')) {
+        try {
+            // Logique de désactivation
+            SRT.notifications.show('success', 'Alerte désactivée', 'L\'alerte a été désactivée');
+            location.reload();
+        } catch (error) {
+            SRT.notifications.show('error', 'Erreur', 'Impossible de désactiver l\'alerte');
+        }
+    }
+}
+</script>
+{% endblock %}

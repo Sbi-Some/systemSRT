@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Événements de Sécurité - SRT{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-white">Événements de Sécurité</h1>
+            <p class="text-gray-400 mt-1">Historique des événements et incidents de sécurité</p>
+        </div>
+        
+        {% if can_view_all %}
+        <div class="text-sm text-green-400 bg-green-900/20 px-3 py-1 rounded-full">
+            Vue Administrateur - Tous les événements
+        </div>
+        {% else %}
+        <div class="text-sm text-blue-400 bg-blue-900/20 px-3 py-1 rounded-full">
+            Vos événements uniquement
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Filtres -->
+    <div class="srt-card p-4">
+        <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="srt-form-label">Type d'événement</label>
+                <select name="event_type" class="srt-form-input">
+                    <option value="">Tous les types</option>
+                    <option value="LOGIN">Connexion</option>
+                    <option value="LOGOUT">Déconnexion</option>
+                    <option value="FAILED_LOGIN">Échec connexion</option>
+                    <option value="PASSWORD_CHANGE">Changement mot de passe</option>
+                    <option value="PERMISSION_DENIED">Accès refusé</option>
+                    <option value="SUSPICIOUS_ACTIVITY">Activité suspecte</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Sévérité</label>
+                <select name="severity" class="srt-form-input">
+                    <option value="">Toutes les sévérités</option>
+                    <option value="LOW">Faible</option>
+                    <option value="MEDIUM">Moyen</option>
+                    <option value="HIGH">Élevé</option>
+                    <option value="CRITICAL">Critique</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="srt-form-label">Période</label>
+                <select name="period" class="srt-form-input">
+                    <option value="">Toute la période</option>
+                    <option value="today">Aujourd'hui</option>
+                    <option value="week">Cette semaine</option>
+                    <option value="month">Ce mois</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button type="submit" class="srt-button-primary w-full">
+                    <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+                    </svg>
+                    Filtrer
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Liste des événements -->
+    <div class="srt-card">
+        <div class="srt-table">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th class="text-left">Date/Heure</th>
+                        <th class="text-left">Type</th>
+                        <th class="text-left">Utilisateur</th>
+                        <th class="text-left">Sévérité</th>
+                        <th class="text-left">Description</th>
+                        <th class="text-left">IP</th>
+                        <th class="text-left">Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr class="hover:bg-slate-700/50">
+                        <td class="text-sm text-gray-300">
+                            {{ event.timestamp|date:"d/m/Y H:i:s" }}
+                        </td>
+                        <td>
+                            <span class="text-sm font-medium text-white">
+                                {{ event.get_event_type_display }}
+                            </span>
+                        </td>
+                        <td class="text-sm">
+                            {% if event.user %}
+                                <div class="text-white">{{ event.user.get_full_name }}</div>
+                                <div class="text-gray-400">{{ event.user.username }}</div>
+                            {% else %}
+                                <span class="text-gray-400">Utilisateur inconnu</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="srt-badge 
+                                {% if event.severity == 'CRITICAL' %}srt-badge-danger
+                                {% elif event.severity == 'HIGH' %}srt-badge-warning
+                                {% elif event.severity == 'MEDIUM' %}srt-badge-primary
+                                {% else %}srt-badge-success{% endif %}">
+                                {{ event.get_severity_display }}
+                            </span>
+                        </td>
+                        <td class="text-sm text-gray-300 max-w-xs truncate">
+                            {{ event.description }}
+                        </td>
+                        <td class="text-sm text-gray-400 font-mono">
+                            {{ event.ip_address }}
+                        </td>
+                        <td>
+                            {% if event.investigated %}
+                                <span class="srt-badge srt-badge-success">Traité</span>
+                            {% else %}
+                                <span class="srt-badge srt-badge-warning">En attente</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-gray-400">
+                            Aucun événement trouvé
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="flex justify-between items-center p-6 border-t border-gray-600">
+            <div class="text-sm text-gray-400">
+                Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                ({{ page_obj.paginator.count }} événements au total)
+            </div>
+            <div class="flex space-x-2">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="srt-action-button">Précédent</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="srt-action-button">Suivant</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
